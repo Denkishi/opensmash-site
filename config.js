@@ -17,7 +17,7 @@ window.OSU_CONFIG = {
   ONLINE_GUIDE: "docs/ONLINE.md",
 
   // Discord invite (e.g. "https://discord.gg/xxxxxxx"). Empty: the buttons show "Discord: soon" and are disabled.
-  DISCORD_URL: "",
+  DISCORD_URL: "https://discord.gg/RyZpx3u2t4",
 
   // Video tutorial (e.g. a YouTube link). Empty: the button shows "Video tutorial: soon" and is disabled.
   VIDEO_URL: "",
