@@ -26,7 +26,7 @@ window.OSU_CONFIG = {
   // The lobby serves it with:  python ssbu_lobby.py --status-port 8080   and deploy_lobby.sh publishes it as
   // https://<your domain>/status through Caddy. Empty: the widget says "not configured".
   // It must be HTTPS: a page on GitHub Pages cannot read a plain http:// URL.
-  STATUS_URL: "",
+  STATUS_URL: "https://opensmash-lobby.duckdns.org/status",
 
   // Seconds between two status refreshes.
   STATUS_REFRESH_S: 30,

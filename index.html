@@ -210,7 +210,7 @@
     <h2 id="install-title" class="big reveal">THREE<br><span class="outline">STEPS.</span></h2>
     <ol class="steps">
       <li class="step reveal"><span class="step-n">01</span><h3>Download</h3><p>Get the repository from GitHub (<em>Code</em>, <em>Download ZIP</em>) and unpack it anywhere.</p><a class="link" data-link="repo" href="https://github.com/Denkishi/ssbu-recomp" rel="noopener">Open the repository &rarr;</a></li>
-      <li class="step reveal"><span class="step-n">02</span><h3>Install</h3><p>Double-click <code>Install SSBU.bat</code>. It finds your game, update, DLC, keys and firmware, checks your PC, then builds. About 45 minutes on a fast PC; if it stops, run it again and it resumes.</p></li>
+      <li class="step reveal"><span class="step-n">02</span><h3>Install</h3><p>Double-click <code>Install SSBU.bat</code> (if Windows warns about a downloaded file: <em>More info</em>, <em>Run anyway</em>). In the window pick your game package (<code>.nsp</code> / <code>.xci</code> / <code>.nsz</code>), the 13.0.4 or 13.0.5 update and your <code>prod.keys</code> &mdash; or let it find them in your yuzu / Ryujinx folders &mdash; and press <em>Install</em>. No firmware needed. Answer <em>Yes</em> once when Windows asks for administrator rights (the LLVM compiler). About 45 minutes on a fast PC; if it stops, run it again and it resumes.</p></li>
       <li class="step reveal"><span class="step-n">03</span><h3>Play</h3><p>Double-click <code>Play SSBU.bat</code> or the desktop shortcut. Your saves go to <code>build\saves</code>.</p></li>
     </ol>
     <div class="install-foot reveal">
@@ -219,13 +219,44 @@
         <ul>
           <li>Windows 10 or 11, 64-bit</li>
           <li>A GPU with a Vulkan 1.3 driver</li>
-          <li>About 10 GB of disk</li>
+          <li>About 25 GB of free disk (8 GB for the build + up to 17 GB for the dump made from your packages)</li>
+          <li>A CPU with AVX2 (most CPUs from 2013 on)</li>
           <li>Your own copy of the game (13.0.4 or 13.0.5), dumped from a console you own</li>
         </ul>
       </div>
       <div class="install-links">
         <a class="btn btn-primary" data-link="guide" href="https://github.com/Denkishi/ssbu-recomp/blob/main/BUILDING.md" rel="noopener"><span>Install guide</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h12M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5"/></svg></a>
         <a class="btn btn-ghost" data-link="video" href="#install"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg><span data-label>Video tutorial</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ========== PLAY WITH A FRIEND ========== -->
+<section id="friend" class="section install" aria-labelledby="friend-title">
+  <div class="wrap">
+    <p class="eyebrow reveal">Try it with a friend <span class="badge exp">Experimental</span></p>
+    <h2 id="friend-title" class="big reveal">PLAY WITH<br><span class="outline">A FRIEND.</span></h2>
+    <ol class="steps">
+      <li class="step reveal"><span class="step-n">01</span><h3>Both install</h3><p>Each of you follows the three steps above on your own PC, with your own copy of the game. Use the <b>same game update</b> (both 13.0.4 or both 13.0.5) and download the project on the <b>same day</b> (the same version of it), then start the game once from the desktop shortcut.</p></li>
+      <li class="step reveal"><span class="step-n">02</span><h3>Turn online on</h3><p>In the game press <kbd>F1</kbd> (or a controller's <b>Home</b> button) &rarr; <b>Experimental</b> &rarr; <b>Online play: ON</b> &rarr; mode <b>Lobby server</b> (already filled in) &rarr; <b>Restart the game now</b>. If Windows asks about the network, allow it.</p></li>
+      <li class="step reveal"><span class="step-n">03</span><h3>Create &amp; join</h3><p>One of you: main menu &rarr; <b>Local Wireless</b> &rarr; <b>Create Room</b>. The other: <b>Local Wireless</b> &rarr; <b>Rooms List</b> &rarr; pick the room. The host accepts the request, you both pick fighters and stage, the host starts with <b>L + R</b>.</p></li>
+    </ol>
+    <div class="install-foot reveal">
+      <div class="req">
+        <h3>If the room does not show up</h3>
+        <ul>
+          <li>Check that both of you are on the same game update and project version.</li>
+          <li>Look at the lobby status on this page: it must say <i>Online</i>.</li>
+          <li>Same house? Pick <b>Same network (LAN)</b> on both PCs instead.</li>
+          <li>Still nothing: one of you picks <b>Host a room</b> and sends the <b>ROOM CODE</b> shown there; the other picks <b>Join with a code</b> and types it.</li>
+          <li>Press <kbd>F1</kbd> &rarr; <b>Log</b> &rarr; <b>Export</b> and send the file on Discord.</li>
+        </ul>
+      </div>
+      <div class="install-links">
+        <a class="btn btn-primary" data-link="discord" href="#friend" rel="noopener"><span>Ask on Discord</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h12M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5"/></svg></a>
+        <a class="btn btn-ghost" data-link="online" href="https://github.com/Denkishi/ssbu-recomp/blob/main/docs/ONLINE.md" rel="noopener"><span>Online guide</span></a>
       </div>
     </div>
   </div>
@@ -243,7 +274,7 @@
         <li class="reveal"><b>Room code</b><span>Host and join over the internet with a code, no server.</span></li>
         <li class="reveal"><b>Lobby</b><span>A small open-source lobby server; players need no port forwarding.</span></li>
       </ul>
-      <p class="note reveal">Off by default. Tested with two game instances on one PC; not yet between two PCs over the internet. No encryption yet: play with people you know. Delay-based for now; rollback is in development.</p>
+      <p class="note reveal">Off by default: switch it on in the game with <kbd>F1</kbd> &rarr; Experimental &rarr; Online play. Our public lobby is in Milan. Tested with two game instances on one PC; your matches between two PCs over the internet are the first real tests. No encryption yet: play with people you know. Delay-based for now; rollback is in development.</p>
       <a class="link reveal" data-link="online" href="https://github.com/Denkishi/ssbu-recomp/blob/main/docs/ONLINE.md" rel="noopener">How to turn it on &rarr;</a>
     </div>
 
