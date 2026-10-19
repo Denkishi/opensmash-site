@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenSmash-Ultimate: recompiled, not emulated</title>
+<meta name="description" content="OpenSmash-Ultimate is an open-source native PC port of Super Smash Bros. Ultimate made by static recompilation: the Switch code translated to C and compiled for Windows, no emulator. Build it from your own game with a one-click installer. GPL-3.0. Not affiliated with Nintendo.">
+<meta name="theme-color" content="#050505">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<!-- Open Graph / social card. Social sites want absolute URLs: after enabling GitHub Pages, replace
+     "assets/og-image.png" and og:url with the full https:// address of the site (see README.md). -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="OpenSmash-Ultimate: recompiled, not emulated">
+<meta property="og:description" content="A native PC port made by static recompilation. Vulkan renderer, one-click installer, fighters as C++ source, online in development. Open source, GPL-3.0. Not affiliated with Nintendo.">
+<meta property="og:image" content="https://denkishi.github.io/opensmash-site/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="OpenSmash-Ultimate: white diagonal slashes on black with the project name">
+<meta property="og:url" content="https://denkishi.github.io/opensmash-site/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OpenSmash-Ultimate: recompiled, not emulated">
+<meta name="twitter:description" content="Native PC port by static recompilation. Open source, GPL-3.0. Not affiliated with Nintendo.">
+<meta name="twitter:image" content="https://denkishi.github.io/opensmash-site/assets/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script>document.documentElement.className += " js";</script>
+<script src="config.js"></script>
+<script src="js/main.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"OpenSmash-Ultimate","applicationCategory":"GameApplication","operatingSystem":"Windows 10, Windows 11 (x64)","license":"https://www.gnu.org/licenses/gpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Open-source native PC port of Super Smash Bros. Ultimate by static recompilation. Build it from your own game. Not affiliated with Nintendo."}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- reusable emblem -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <mask id="emblem-cut" maskContentUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="#fff"/>
+      <polygon points="55,-4 71,-4 45,104 29,104" fill="#000"/>
+    </mask>
+    <symbol id="emblem" viewBox="0 0 100 100">
+      <path mask="url(#emblem-cut)" fill="currentColor" fill-rule="evenodd" d="M18 88 L40 12 H92 L70 88 Z M35 74 H59 L73 26 H49 Z"/>
+      <polygon class="emblem-slash" points="63,0 68,0 42,100 37,100" fill="#ff3b30"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="top">
+  <a class="brand" href="#top" aria-label="OpenSmash-Ultimate, back to top">
+    <svg class="brand-mark" aria-hidden="true"><use href="#emblem"/></svg>
+    <span class="brand-word">OPENSMASH<span>-ULTIMATE</span></span>
+  </a>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span class="sr">Menu</span></button>
+  <nav id="nav-links" class="nav-links" aria-label="Sections">
+    <a href="#what">What</a>
+    <a href="#features">Features</a>
+    <a href="#install">Install</a>
+    <a href="#online">Online</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#faq">FAQ</a>
+    <a class="nav-cta" data-link="repo" href="https://github.com/Denkishi/ssbu-recomp" rel="noopener">GitHub</a>
+  </nav>
+</header>
+
+<main id="main">
+
+<!-- ========== HERO ========== -->
+<section class="hero" aria-labelledby="hero-title">
+  <canvas class="hero-canvas" aria-hidden="true"></canvas>
+  <div class="hero-slashes" aria-hidden="true">
+    <i class="slash s1"></i><i class="slash s2"></i><i class="slash s3"></i><i class="slash s4"></i><i class="slash s5"></i>
+  </div>
+  <div class="hero-vert" aria-hidden="true">NATIVE&nbsp;/&nbsp;PC&nbsp;/&nbsp;OPEN&nbsp;SOURCE</div>
+  <div class="hero-inner" data-parallax="0.12">
+    <p class="kicker"><span class="dot"></span>Static recompilation &middot; GPL-3.0 &middot; Windows x64</p>
+    <h1 id="hero-title" class="hero-title">
+      <span class="line l1"><span>OPEN</span><span class="red">SMASH</span></span>
+      <span class="line l2"><span class="outline">ULTIMATE</span></span>
+    </h1>
+    <p class="tagline"><strong>Recompiled, not emulated.</strong> The Switch game's code, translated to C and compiled into a real Windows program. Built on your PC, from your own copy.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#install"><span>Get it</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h12M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5"/></svg></a>
+      <a class="btn btn-ghost" data-link="repo" href="https://github.com/Denkishi/ssbu-recomp" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z"/></svg><span>GitHub</span></a>
+      <a class="btn btn-ghost" data-link="discord" href="#community"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18 18 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.5C.6 9.1-.3 13.7.1 18.2a19.8 19.8 0 0 0 6 3l1.3-2.1a12.8 12.8 0 0 1-2-1l.5-.4a14 14 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.7 19.7 0 0 0 6-3c.5-5.2-.8-9.8-3.6-13.8zM8 15.4c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.6 8 10.6s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg><span data-label>Discord</span></a>
+    </div>
+    <ul class="chips" aria-label="At a glance">
+      <li>Vulkan renderer</li><li>Game 13.0.4 / 13.0.5</li><li>One-click installer</li><li>No game files included</li>
+    </ul>
+  </div>
+  <a class="scroll-cue" href="#what" aria-label="Scroll to: what it is"><span></span></a>
+  <div class="hero-cut" aria-hidden="true"></div>
+</section>
+
+<!-- ========== MARQUEE BAND ========== -->
+<div class="band" aria-hidden="true">
+  <div class="band-track">
+    <span>NO EMULATOR</span><b>/</b><span>NO JIT</span><b>/</b><span>NATIVE X64</span><b>/</b><span>VULKAN</span><b>/</b><span>OPEN SOURCE</span><b>/</b><span>YOUR GAME, YOUR PC</span><b>/</b>
+    <span>NO EMULATOR</span><b>/</b><span>NO JIT</span><b>/</b><span>NATIVE X64</span><b>/</b><span>VULKAN</span><b>/</b><span>OPEN SOURCE</span><b>/</b><span>YOUR GAME, YOUR PC</span><b>/</b>
+  </div>
+</div>
+
+<!-- ========== WHAT IT IS ========== -->
+<section id="what" class="section what" aria-labelledby="what-title">
+  <div class="wrap">
+    <p class="eyebrow reveal">01 / What it is</p>
+    <h2 id="what-title" class="big reveal">NOT AN<br><span class="outline">EMULATOR.</span></h2>
+    <div class="what-grid">
+      <p class="lead reveal">OpenSmash-Ultimate turns the Nintendo Switch version of <em>Super Smash Bros. Ultimate</em> into a normal Windows program, <strong>ahead of time</strong>. There is no CPU interpreter and no JIT running while you play: the console's system libraries (files, audio, video, input, threads, graphics) are re-implemented by the project's own runtime.</p>
+      <ol class="pipeline" aria-label="How it works">
+        <li class="reveal"><span class="pnum">A</span><span class="ptitle">Your dump</span><span class="ptext">The game you own, dumped from your console. Never in this project.</span></li>
+        <li class="reveal"><span class="pnum">B</span><span class="ptitle">AArch64 &rarr; C</span><span class="ptext">One C function per game function, checked against a CPU emulator on 32,043 instruction cases.</span></li>
+        <li class="reveal"><span class="pnum">C</span><span class="ptitle">Compiled for Windows</span><span class="ptext">clang builds a game DLL; the runtime brings the console's services and NVN on Vulkan.</span></li>
+        <li class="reveal"><span class="pnum">D</span><span class="ptitle">Play</span><span class="ptext">A resizable 16:9 window, your GPU, any controller. Saves stay on your PC.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SCREENSHOTS ==========
+     Screenshot slots: put your own captures (from your own build) at
+       assets/screens/01.jpg  02.jpg  03.jpg  04.jpg  05.jpg  (16:9, about 1600x900, under 300 KB each)
+     A missing file shows the drawn fallback, so the page always looks complete. Captions are below each slot. -->
+<section class="section shots" aria-labelledby="shots-title">
+  <div class="wrap">
+    <p class="eyebrow reveal">02 / On screen</p>
+    <h2 id="shots-title" class="big reveal">RUNNING<br><span class="outline">NATIVELY.</span></h2>
+  </div>
+  <div class="shots-rail">
+    <figure class="shot reveal" style="--h:0">
+      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>01</span></div>
+        <img src="assets/screens/01.jpg" alt="A match running natively on Windows" loading="lazy" decoding="async" width="1600" height="900"></div>
+      <figcaption>A full match, native, 59&ndash;60 fps</figcaption>
+    </figure>
+    <figure class="shot reveal" style="--h:1">
+      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>02</span></div>
+        <img src="assets/screens/02.jpg" alt="The one-click installer window during a build" loading="lazy" decoding="async" width="1600" height="900"></div>
+      <figcaption>The one-click installer</figcaption>
+    </figure>
+    <figure class="shot reveal" style="--h:2">
+      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>03</span></div>
+        <img src="assets/screens/03.jpg" alt="The in-game settings menu opened with F1" loading="lazy" decoding="async" width="1600" height="900"></div>
+      <figcaption>In-game settings menu (F1)</figcaption>
+    </figure>
+    <figure class="shot reveal" style="--h:3">
+      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>04</span></div>
+        <img src="assets/screens/04.jpg" alt="The game's menus running natively" loading="lazy" decoding="async" width="1600" height="900"></div>
+      <figcaption>Menus, natively on Windows</figcaption>
+    </figure>
+    <figure class="shot reveal" style="--h:4">
+      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>05</span></div>
+        <img src="assets/screens/05.jpg" alt="Fighter move script as readable C++ source" loading="lazy" decoding="async" width="1600" height="900"></div>
+      <figcaption>Fighters as readable C++</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ========== NUMBERS ========== -->
+<section class="numbers" aria-label="Measured numbers">
+  <div class="wrap nums">
+    <div class="num reveal"><b data-count="32043">32,043</b><span>instruction tests, 0 differences from the original CPU behaviour</span></div>
+    <div class="num reveal"><b data-count="1100" data-prefix="~">~1,100</b><span>console system-library entry points re-implemented</span></div>
+    <div class="num reveal"><b data-count="95" data-suffix="%">95%</b><span>of fighter move scripts turned into equivalent C++ source</span></div>
+    <div class="num reveal"><b>59&ndash;60</b><span>fps in fights, measured on an NVIDIA GPU and an Intel iGPU</span></div>
+  </div>
+</section>
+
+<!-- ========== FEATURES ========== -->
+<section id="features" class="section features" aria-labelledby="feat-title">
+  <div class="wrap">
+    <p class="eyebrow reveal">03 / Features</p>
+    <div class="head-row">
+      <h2 id="feat-title" class="big reveal">WHAT'S<br><span class="outline">IN THE BOX.</span></h2>
+      <div class="filters reveal" role="group" aria-label="Filter features by status">
+        <button class="filter is-on" data-filter="all" aria-pressed="true">All</button>
+        <button class="filter" data-filter="done" aria-pressed="false">Done</button>
+        <button class="filter" data-filter="exp" aria-pressed="false">Experimental</button>
+        <button class="filter" data-filter="wip" aria-pressed="false">In progress</button>
+      </div>
+    </div>
+    <ul class="grid">
+      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>Native, not emulated</h3><p>The game's AArch64 machine code is translated to C once and compiled for x64. No interpreter, no JIT at run time.</p></li>
+      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>Vulkan renderer</h3><p>The game's graphics API (NVN) translated to Vulkan 1.3, with an OpenGL fallback. Resolution scale, vsync modes, a low profile for integrated GPUs.</p></li>
+      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>Game 13.0.4 and 13.0.5</h3><p>Base game with the 13.0.4 or 13.0.5 update. The build tells them apart and refuses anything else.</p></li>
+      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>Shaders loaded at start</h3><p>Shaders are prepared from the game's own shader containers by background threads: 0 pipeline holds in fight frames in our first-run tests.</p></li>
+      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>One-click installer</h3><p>No Visual Studio needed, a private Python, finds your keys and firmware in emulator folders, applies the update and DLC, every download hash-checked, resumable.</p></li>
+      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>In-game settings menu</h3><p><kbd>F1</kbd> or a controller's Home button: display, graphics, window, volume, full key and button remapping, add-ons, language, log and a stats overlay (F2), over the running game. On by default.</p></li>
+      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>Full remapping</h3><p>Every key and button, per controller or per controller kind, with dead zones, trigger threshold and a live input test. <kbd>F2</kbd> shows a stats overlay.</p></li>
+      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>On-screen keyboard</h3><p>Type names with a controller on a keyboard drawn over the game; the PC keyboard works too.</p></li>
+      <li class="card reveal" data-status="exp"><span class="badge exp">Experimental</span><h3>Online play</h3><p>The game's own Local Wireless mode over a network: same LAN, a room code between two PCs, or a lobby server. Off by default.</p></li>
+      <li class="card reveal" data-status="exp"><span class="badge exp">Experimental</span><h3>Run-ahead</h3><p>Runs one frame ahead to cut a frame of input delay, bit-exact in tests. Off by default; not fast enough on every PC yet.</p></li>
+      <li class="card reveal" data-status="wip"><span class="badge wip">In progress</span><h3>Rollback netcode</h3><p>Our own network layer with rollback. Input queues: done. Snapshot ring: done. Rollback simulation and protocol: next.</p></li>
+      <li class="card reveal" data-status="wip"><span class="badge wip">In progress</span><h3>Fighters as C++ source</h3><p>Fighter status scripts decompiled to readable, editable C++ (85% published), each proven equal to the original in differential tests.</p></li>
+    </ul>
+    <p class="legend reveal"><span class="badge done">Done</span> works and was tested on the development PC &nbsp; <span class="badge exp">Experimental</span> works, off by default or not widely tested &nbsp; <span class="badge wip">In progress</span> being built</p>
+  </div>
+</section>
+
+<!-- ========== INSTALL ========== -->
+<section id="install" class="section install" aria-labelledby="install-title">
+  <div class="slash-bg" aria-hidden="true"></div>
+  <div class="wrap">
+    <p class="eyebrow reveal">04 / Install</p>
+    <h2 id="install-title" class="big reveal">THREE<br><span class="outline">STEPS.</span></h2>
+    <ol class="steps">
+      <li class="step reveal"><span class="step-n">01</span><h3>Download</h3><p>Get the repository from GitHub (<em>Code</em>, <em>Download ZIP</em>) and unpack it anywhere.</p><a class="link" data-link="repo" href="https://github.com/Denkishi/ssbu-recomp" rel="noopener">Open the repository &rarr;</a></li>
+      <li class="step reveal"><span class="step-n">02</span><h3>Install</h3><p>Double-click <code>Install SSBU.bat</code>. It finds your game, update, DLC, keys and firmware, checks your PC, then builds. About 45 minutes on a fast PC; if it stops, run it again and it resumes.</p></li>
+      <li class="step reveal"><span class="step-n">03</span><h3>Play</h3><p>Double-click <code>Play SSBU.bat</code> or the desktop shortcut. Your saves go to <code>build\saves</code>.</p></li>
+    </ol>
+    <div class="install-foot reveal">
+      <div class="req">
+        <h3>You need</h3>
+        <ul>
+          <li>Windows 10 or 11, 64-bit</li>
+          <li>A GPU with a Vulkan 1.3 driver</li>
+          <li>About 10 GB of disk</li>
+          <li>Your own copy of the game (13.0.4 or 13.0.5), dumped from a console you own</li>
+        </ul>
+      </div>
+      <div class="install-links">
+        <a class="btn btn-primary" data-link="guide" href="https://github.com/Denkishi/ssbu-recomp/blob/main/BUILDING.md" rel="noopener"><span>Install guide</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h12M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5"/></svg></a>
+        <a class="btn btn-ghost" data-link="video" href="#install"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg><span data-label>Video tutorial</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== ONLINE + STATUS ========== -->
+<section id="online" class="section online" aria-labelledby="online-title">
+  <div class="wrap online-grid">
+    <div>
+      <p class="eyebrow reveal">05 / Online <span class="badge exp">Experimental</span></p>
+      <h2 id="online-title" class="big reveal">PLAY<br><span class="outline">ONLINE.</span></h2>
+      <p class="lead reveal">The game's own Local Wireless mode, carried over a network. Create a room, the other player finds it in the Rooms List and joins. No extra program.</p>
+      <ul class="modes">
+        <li class="reveal"><b>LAN</b><span>Same network, no server: rooms are found automatically.</span></li>
+        <li class="reveal"><b>Room code</b><span>Host and join over the internet with a code, no server.</span></li>
+        <li class="reveal"><b>Lobby</b><span>A small open-source lobby server; players need no port forwarding.</span></li>
+      </ul>
+      <p class="note reveal">Off by default. Tested with two game instances on one PC; not yet between two PCs over the internet. No encryption yet: play with people you know. Delay-based for now; rollback is in development.</p>
+      <a class="link reveal" data-link="online" href="https://github.com/Denkishi/ssbu-recomp/blob/main/docs/ONLINE.md" rel="noopener">How to turn it on &rarr;</a>
+    </div>
+
+    <div class="status reveal" id="status" data-state="idle" aria-labelledby="status-title">
+      <div class="status-head">
+        <h3 id="status-title">Lobby status</h3>
+        <span class="status-pill" role="status" aria-live="polite"><i></i><span class="status-text">Checking&hellip;</span></span>
+      </div>
+      <dl class="status-grid">
+        <div><dt>Players online</dt><dd data-k="players">&ndash;</dd></div>
+        <div><dt>Rooms</dt><dd data-k="rooms">&ndash;</dd></div>
+        <div><dt>Lobby</dt><dd data-k="lobby">&ndash;</dd></div>
+        <div><dt>Uptime</dt><dd data-k="uptime">&ndash;</dd></div>
+      </dl>
+      <div class="status-foot">
+        <span>Version <b data-k="version">&ndash;</b></span>
+        <span>Last update <b data-k="updated">&ndash;</b></span>
+      </div>
+      <p class="status-msg" data-k="msg"></p>
+      <div class="status-scan" aria-hidden="true"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== ROADMAP ========== -->
+<section id="roadmap" class="section roadmap" aria-labelledby="road-title">
+  <div class="wrap">
+    <p class="eyebrow reveal">06 / Roadmap</p>
+    <h2 id="road-title" class="big reveal">WHAT'S<br><span class="outline">NEXT.</span></h2>
+    <ol class="road">
+      <li class="road-item reveal"><span class="road-n">01</span><div><h3>Rollback online</h3><p>Own network layer: fight state as data, logic-only frame stepping. Input queues and snapshot ring are done; rollback simulation and the protocol come next.</p></div><span class="badge wip">In progress</span></li>
+      <li class="road-item reveal"><span class="road-n">02</span><div><h3>Zero input delay</h3><p>Run-ahead made to fit the 16.7 ms frame on every PC, so you feel the game as fast as it can be.</p></div><span class="badge wip">In progress</span></li>
+      <li class="road-item reveal"><span class="road-n">03</span><div><h3>Fixed 60 fps</h3><p>Fight frames are already hold-free in tests; every mode at a steady 60 is the goal.</p></div><span class="badge wip">In progress</span></li>
+      <li class="road-item reveal"><span class="road-n">04</span><div><h3>Fighters 100% source</h3><p>Every fighter's scripts as readable C++, each proven equal to the original. 85% published today.</p><div class="bar" style="--p:85"><i></i></div></div><span class="badge wip">In progress</span></li>
+      <li class="road-item reveal"><span class="road-n">05</span><div><h3>Items as source</h3><p>Items and stages turned into readable source too, after the fighters.</p></div><span class="badge plan">Planned</span></li>
+      <li class="road-item reveal"><span class="road-n">06</span><div><h3>Mods as single files</h3><p>Drop one file in the characters folder and the fighter is in the game.</p></div><span class="badge wip">In progress</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ========== TOOLS ========== -->
+<section id="tools" class="section tools" aria-labelledby="tools-title">
+  <div class="wrap">
+    <p class="eyebrow reveal">07 / Tools</p>
+    <h2 id="tools-title" class="big reveal">BUILT<br><span class="outline">TO MOD.</span></h2>
+    <ul class="tool-grid">
+      <li class="tool reveal"><h3>Lobby server</h3><p>Run your own online lobby: one Python file, standard library only, with a status endpoint.</p><a class="link" data-tool="lobby" href="#tools">Soon</a></li>
+      <li class="tool reveal"><h3>Fighter SDK</h3><p>Decompile fighter scripts to C++, edit, rebuild a fighter in about a second; hook any game function from a mod DLL.</p><a class="link" data-tool="sdk" href="#tools">Soon</a></li>
+      <li class="tool reveal"><h3>Single-file packager</h3><p>Pack a fighter mod into one file that you drop into the characters folder.</p><a class="link" data-tool="packager" href="#tools">Soon</a></li>
+      <li class="tool reveal"><h3>Mod manager</h3><p>Turn mods on and off and keep them in sync with your build.</p><a class="link" data-tool="modmanager" href="#tools">Soon</a></li>
+      <li class="tool reveal"><h3>Frame compare</h3><p>Compare two builds frame by frame from their per-frame state hash logs.</p><a class="link" data-tool="replay" href="#tools">Soon</a></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ========== FAQ / COMMUNITY ========== -->
+<section id="faq" class="section faq" aria-labelledby="faq-title">
+  <div class="wrap faq-grid">
+    <div>
+      <p class="eyebrow reveal">08 / FAQ</p>
+      <h2 id="faq-title" class="big reveal">STRAIGHT<br><span class="outline">ANSWERS.</span></h2>
+    </div>
+    <div class="qa">
+      <details class="reveal"><summary>Is this an emulator?</summary><p>No. There is no CPU interpreter or JIT. The game's code is translated to C ahead of time and compiled for Windows; the console's services are re-implemented by the project's runtime.</p></details>
+      <details class="reveal"><summary>Does it include the game?</summary><p>No. The project contains no game code, no game assets, no keys and no firmware, and does not link to any. Everything derived from the game is generated on your PC from your own dump and never leaves it.</p></details>
+      <details class="reveal"><summary>Do I need to own the game?</summary><p>Yes. You need your own copy of the game (13.0.4 or 13.0.5) and a console you own to dump it, its keys and firmware. That is the one step the project cannot do for you.</p></details>
+      <details class="reveal"><summary>Why do I have to build it? Why no download?</summary><p>The build contains code derived from the game, which cannot be distributed. The installer generates it on your PC from your dump, in one click.</p></details>
+      <details class="reveal"><summary>Can I play online?</summary><p>Experimentally: Local Wireless over a LAN, with a room code or through a lobby server. It is off by default and delay-based; rollback netcode is in development.</p></details>
+      <details class="reveal"><summary>Linux or Steam Deck?</summary><p>Not yet. The runtime is Windows-only today; other platforms are on the roadmap.</p></details>
+      <details class="reveal"><summary>What is the licence?</summary><p>GPL-3.0 (version 3 or later), every file. You can read, change and share the code under the same terms.</p></details>
+      <details class="reveal"><summary>Was this built with AI?</summary><p>Yes, openly: almost all code was written by AI coding agents directed by the maintainer. Every claim is backed by a test or a measurement.</p></details>
+    </div>
+  </div>
+  <div class="wrap community" id="community">
+    <div class="comm reveal">
+      <h3>Join the community</h3>
+      <p>Testers with other GPUs and controllers, and people who know the game's internals or the modding tools, are very welcome.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" data-link="discord" href="#community"><span data-label>Discord</span></a>
+        <a class="btn btn-ghost" data-link="issues" href="https://github.com/Denkishi/ssbu-recomp/issues" rel="noopener"><span>Report a bug</span></a>
+        <a class="btn btn-ghost" data-link="contributing" href="https://github.com/Denkishi/ssbu-recomp/blob/main/CONTRIBUTING.md" rel="noopener"><span>Contribute</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-cut" aria-hidden="true"></div>
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <svg class="brand-mark big-mark" aria-hidden="true"><use href="#emblem"/></svg>
+      <p class="footer-name">OPENSMASH-ULTIMATE</p>
+      <p class="small">Recompiled, not emulated. Free software under the <a data-link="license" href="https://github.com/Denkishi/ssbu-recomp/blob/main/LICENSE" rel="noopener">GNU GPL v3.0 or later</a>.</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <a data-link="repo" href="https://github.com/Denkishi/ssbu-recomp" rel="noopener">GitHub</a>
+      <a data-link="guide" href="https://github.com/Denkishi/ssbu-recomp/blob/main/BUILDING.md" rel="noopener">Install guide</a>
+      <a data-link="online" href="https://github.com/Denkishi/ssbu-recomp/blob/main/docs/ONLINE.md" rel="noopener">Online guide</a>
+      <a data-link="issues" href="https://github.com/Denkishi/ssbu-recomp/issues" rel="noopener">Issues</a>
+      <a data-link="discord" href="#community"><span data-label>Discord</span></a>
+    </nav>
+    <p class="legal">OpenSmash-Ultimate is not affiliated with, endorsed or sponsored by Nintendo, Bandai Namco or Sora Ltd. <em>Super Smash Bros.</em> and <em>Nintendo Switch</em> are trademarks of their owners and are named only to say what the software works with. This project contains no copyrighted game data, no console keys and no firmware, and does not help anyone obtain them. You must own the game and dump it yourself. All artwork on this site is original.</p>
+  </div>
+</footer>
+</body>
+</html>
