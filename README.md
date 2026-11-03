@@ -1,6 +1,6 @@
 # OpenSmash-Ultimate website
 
-The landing page of [OpenSmash-Ultimate](https://github.com/Denkishi/ssbu-recomp), a native PC port of
+The landing page of [OpenSmash-Ultimate](https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate), a native PC port of
 *Super Smash Bros. Ultimate* made by static recompilation. Plain static HTML, CSS and JavaScript: no build step, no
 framework, no tracking. Licensed GPL-3.0 like the project.
 

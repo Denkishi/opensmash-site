@@ -5,19 +5,22 @@
  */
 window.OSU_CONFIG = {
   // The project's public repository (no trailing slash).
-  REPO_URL: "https://github.com/Denkishi/ssbu-recomp",
+  REPO_URL: "https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate",
 
   // Branch used for links to files in the repository.
   REPO_BRANCH: "main",
 
+  // Releases page.
+  RELEASES_URL: "https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/releases",
+
   // Install guide. Relative paths are resolved against the repository (blob/<branch>/...); a full URL is used as is.
-  INSTALL_GUIDE: "BUILDING.md#the-short-way-one-click",
+  INSTALL_GUIDE: "docs/BUILDING.md#install-in-one-go",
 
   // Online guide in the repository.
-  ONLINE_GUIDE: "docs/ONLINE.md",
+  ONLINE_GUIDE: "docs/MULTIPLAYER.md",
 
   // Discord invite (e.g. "https://discord.gg/xxxxxxx"). Empty: the buttons show "Discord: soon" and are disabled.
-  DISCORD_URL: "https://discord.gg/RyZpx3u2t4",
+  DISCORD_URL: "https://discord.gg/pkgyYGf3YB",
 
   // Video tutorial (e.g. a YouTube link). Empty: the button shows "Video tutorial: soon" and is disabled.
   VIDEO_URL: "",
@@ -33,10 +36,10 @@ window.OSU_CONFIG = {
 
   // Future tools: set "url" when a tool is published. Empty url: the card shows "Soon".
   TOOLS: {
-    lobby: "tools/net/ssbu_lobby.py",          // in the repository today (relative = inside the repo)
-    sdk: "fighter_sdk",                        // in the repository today
+    lobby: "ssbu-recomp/tools/net/ssbu_lobby.py",          // in the repository today (relative = inside the repo)
+    sdk: "ssbu-recomp/fighter_sdk",                        // in the repository today
     packager: "",                              // single-file fighter packager: planned
-    modmanager: "",                            // mod manager: planned
+    modmanager: "OpenSmash.Launcher",          // the launcher and mod manager (OpenSmash-Ultimate #62)
     replay: ""                                 // frame-by-frame build comparer (state hash viewer): planned
   }
 };

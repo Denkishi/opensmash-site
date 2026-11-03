@@ -19,6 +19,7 @@
   var links = {
     repo: repo,
     issues: repo && repo + "/issues",
+    releases: C.RELEASES_URL || (repo && repo + "/releases"),
     license: inRepo("LICENSE"),
     contributing: inRepo("CONTRIBUTING.md"),
     guide: inRepo(C.INSTALL_GUIDE || "BUILDING.md"),
