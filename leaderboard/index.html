@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leaderboard: OpenSmash-Ultimate</title>
+<meta name="description" content="The OpenSmash-Ultimate online leaderboard: ranked by GSP, overall and per fighter.">
+<meta name="theme-color" content="#050505">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/pages.css">
+<script src="../config.js"></script>
+<script src="../js/page.js" defer></script>
+<script src="../js/leaderboard.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav">
+  <a class="brand" href="../" aria-label="OpenSmash-Ultimate, home">
+    <img class="brand-mark" src="../assets/emblem-white.svg" alt="" aria-hidden="true">
+    <span class="brand-word">OPENSMASH<span>-ULTIMATE</span></span>
+  </a>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span class="sr">Menu</span></button>
+  <nav id="nav-links" class="nav-links" aria-label="Sections">
+    <a href="../#install">Install</a>
+    <a href="../#online">Online</a>
+    <a href="../leaderboard/" class="active" aria-current="page">Leaderboard</a>
+    <a href="../account/">Account</a>
+    <a class="nav-cta" data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener">GitHub</a>
+  </nav>
+</header>
+<main id="main" class="page">
+  <div class="wrap">
+    <h1>Leader<span>board</span></h1>
+    <p class="lede">Online players ranked by GSP. Pick a fighter to see who is best with it.</p>
+    <p class="muted" id="updated"></p>
+    <div id="status" class="notice" role="status" aria-live="polite">Loading&hellip;</div>
+
+    <div id="content" class="hidden">
+      <div class="picker">
+        <label for="fighter">Ranking</label>
+        <select id="fighter"><option value="">Overall</option></select>
+      </div>
+      <div class="table-wrap">
+        <table class="board">
+          <thead><tr id="head"></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <p class="small">OpenSmash-Ultimate is not affiliated with, endorsed or sponsored by Nintendo, Epic Games or Discord. <a href="../privacy/">Privacy</a> &middot; <a href="../terms/">Terms</a> &middot; <a href="../">Home</a></p>
+  </div>
+</footer>
+</body>
+</html>

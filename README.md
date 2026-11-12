@@ -18,6 +18,9 @@ the slashes, the social card and the screenshot fallbacks are original (SVG, CSS
 | `assets/emblem.svg`, `assets/favicon.svg`, `assets/favicon-32.png`, `assets/apple-touch-icon.png` | the emblem and icons |
 | `assets/og-image.png` | the social card (1200x630); its source is `assets/og/og-image.html` |
 | `assets/screens/` | your screenshots (see below) |
+| `account/`, `leaderboard/`, `js/account.js`, `js/leaderboard.js`, `js/page.js`, `css/pages.css` | Discord sign-in and the leaderboard (below) |
+| `leaderboard.json` | the leaderboard data, rewritten by the workflow |
+| `.github/workflows/leaderboard.yml`, `.github/scripts/leaderboard.py` | builds `leaderboard.json` from Epic Online Services |
 | `404.html`, `robots.txt`, `.nojekyll` | GitHub Pages extras |
 
 ## Turn on GitHub Pages
@@ -64,6 +67,22 @@ Counts only: the lobby never puts addresses, names or lobby codes in it.
 
 With `STATUS_URL` empty the box says **Not configured**; when the lobby does not answer it says **Offline** and keeps
 trying. The endpoint sends `Access-Control-Allow-Origin: *`, so any page may read it.
+
+## Leaderboard and Discord sign-in
+
+`leaderboard/` shows the ranking (overall and per fighter); `account/` lets a player sign in with Discord and see their own
+position, GSP and per-fighter GSP. Both read `leaderboard.json`, which starts empty and is rewritten every 30 minutes by the
+**Update leaderboard** workflow (also runnable by hand from the Actions tab).
+
+- The game publishes GSP to Epic Online Services (EOS) stats: `GSP_TOP` (overall) and `GSP_F<n>` per fighter kind `n`.
+- The workflow needs three repository secrets (Settings > Secrets and variables > Actions): `EOS_CLIENT_ID`,
+  `EOS_CLIENT_SECRET`, `EOS_DEPLOYMENT_ID`. Without them it does nothing and the leaderboard stays empty.
+- The EOS client behind them needs a policy allowing it to read leaderboards, stats and Connect user data. The stats
+  (`GSP_TOP`, `GSP_F0`..`GSP_F93`, aggregation LATEST) and a leaderboard `GSP_TOP` (stat `GSP_TOP`, descending) must exist in the
+  EOS Developer Portal. Run `python .github/scripts/leaderboard.py --selftest` to test the script offline.
+- Discord sign-in is OAuth2 with PKCE in the browser (no server, no secret). The redirect
+  `https://denkishi.github.io/opensmash-site/account/` must be listed in the Discord application's OAuth2 settings; if the
+  site moves, change `REDIRECT_URI` in `js/account.js` and that list together.
 
 ## Screenshots
 
