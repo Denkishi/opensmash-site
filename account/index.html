@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account: OpenSmash-Ultimate</title>
+<meta name="description" content="Sign in with Discord to see your OpenSmash-Ultimate rank and GSP.">
+<meta name="theme-color" content="#050505">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/pages.css">
+<script src="../config.js"></script>
+<script src="../js/page.js" defer></script>
+<script src="../js/account.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav">
+  <a class="brand" href="../" aria-label="OpenSmash-Ultimate, home">
+    <img class="brand-mark" src="../assets/emblem-white.svg" alt="" aria-hidden="true">
+    <span class="brand-word">OPENSMASH<span>-ULTIMATE</span></span>
+  </a>
+  <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span class="sr">Menu</span></button>
+  <nav id="nav-links" class="nav-links" aria-label="Sections">
+    <a href="../#install">Install</a>
+    <a href="../#online">Online</a>
+    <a href="../leaderboard/">Leaderboard</a>
+    <a href="../account/" class="active" aria-current="page">Account</a>
+    <a class="nav-cta" data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener">GitHub</a>
+  </nav>
+</header>
+<main id="main" class="page">
+  <div class="wrap">
+    <h1>Your <span>account</span></h1>
+    <p class="lede">Sign in with Discord to see your rank and your GSP on every fighter. Only your Discord name and avatar are read (the <code>identify</code> scope); nothing is stored on our side, and the sign-in lives in this tab only.</p>
+
+    <div id="status" class="notice" role="status" aria-live="polite">Loading&hellip;</div>
+
+    <section id="signed-out" class="hidden">
+      <button id="signin" class="btn btn-solid" type="button"><span>Sign in with Discord</span></button>
+    </section>
+
+    <section id="signed-in" class="hidden" aria-live="polite">
+      <div class="panel">
+        <div class="who">
+          <img id="avatar" class="avatar lg" alt="" width="96" height="96">
+          <div>
+            <p class="who-name"><span id="name"></span><span id="rank" class="rank-pill hidden"></span></p>
+            <p id="handle" class="muted"></p>
+          </div>
+        </div>
+        <div id="overall" class="stats-row hidden">
+          <div class="stat"><b id="overall-gsp">0</b><span>Overall GSP</span></div>
+          <div class="stat"><b id="overall-best">-</b><span>Best fighter</span></div>
+        </div>
+        <p id="unranked" class="muted hidden">Not ranked yet. Play online with your Discord linked and your rank shows up here after the next leaderboard update.</p>
+      </div>
+      <div id="fighters-block" class="hidden">
+        <h2>GSP per fighter</h2>
+        <div class="table-wrap">
+          <table class="board">
+            <thead><tr><th>Fighter</th><th class="num">GSP</th><th class="num">Position</th></tr></thead>
+            <tbody id="fighters"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="muted" id="updated"></p>
+      <p><button id="signout" class="btn btn-outline" type="button"><span>Sign out</span></button></p>
+    </section>
+  </div>
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <p class="small">OpenSmash-Ultimate is not affiliated with, endorsed or sponsored by Nintendo, Epic Games or Discord. <a href="../privacy/">Privacy</a> &middot; <a href="../terms/">Terms</a> &middot; <a href="../">Home</a></p>
+  </div>
+</footer>
+</body>
+</html>
