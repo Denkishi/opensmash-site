@@ -28,7 +28,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="css/style.css?v=2">
-<link rel="stylesheet" href="css/home.css?v=2">
+<link rel="stylesheet" href="css/home.css?v=3">
 <script src="config.js"></script>
 <script src="js/hero.js?v=2" defer></script>
 <script src="js/home.js?v=2" defer></script>
@@ -135,9 +135,30 @@
         <div class="table-wrap" id="table-wrap" hidden>
           <table class="board"><thead><tr id="head"></tr></thead><tbody id="rows"></tbody></table>
         </div>
-        <p class="board-foot"><a class="link" href="leaderboard/">Full leaderboard</a><a href="account/">Sign in with Discord</a><span id="board-upd"></span></p>
+        <p class="board-foot"><a class="navbtn" href="leaderboard/">Full leaderboard</a><a class="navbtn" href="account/">Sign in with Discord</a><span id="board-upd"></span></p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ========== FEATURES ========== -->
+<section id="features" class="section features" aria-labelledby="feat-title">
+  <div class="wrap">
+    <h2 id="feat-title" class="live-title">WHAT'S <span class="outline">IN THE BOX.</span></h2>
+    <ul class="grid">
+      <li class="card"><h3>Native, not emulated</h3><p>The game's code translated to C once and compiled for x64. No interpreter, no JIT.</p></li>
+      <li class="card"><h3>Vulkan by default</h3><p>Vulkan renderer, Direct3D 11 as a choice, Metal on Macs, a faster first start.</p></li>
+      <li class="card"><h3>Online with rollback</h3><p>Rollback netplay for fights, room codes, LAN rooms, one lobby server.</p></li>
+      <li class="card"><h3>Battle Arenas</h3><p>Find or create an arena by its code, right from the game's online menu.</p></li>
+      <li class="card"><h3>GSP ranked</h3><p>GSP per fighter and a public leaderboard on this site.</p></li>
+      <li class="card"><h3>Discord</h3><p>Sign in, Rich Presence with Join, an optional name on the board.</p></li>
+      <li class="card"><h3>Mods and ARCropolis</h3><p>Launcher and mod manager, ARCropolis mods, Skyline plugins, a switch for each mod.</p></li>
+      <li class="card"><h3>Controllers</h3><p>Dead zones, invert, GameCube adapters, keyboard keys, in-game settings (<kbd>F1</kbd>).</p></li>
+      <li class="card"><h3>Ultrawide</h3><p>Ultrawide display support and a low-latency display mode.</p></li>
+      <li class="card"><h3>Linux and macOS</h3><p>An OpenSmash launcher for Linux and macOS (experimental), Steam Deck friendly.</p></li>
+      <li class="card"><h3>New fighters</h3><p>Fighters with files of their own, up to 16, even written as C++ source.</p></li>
+      <li class="card"><h3>One-click installer</h3><p>Finds your game, keys and firmware and builds it for you; resumes if it stops.</p></li>
+    </ul>
   </div>
 </section>
 
@@ -150,7 +171,8 @@
       <li><h3>Set up</h3><p>Point it at your own copy of the game (13.0.5), keys and firmware, then press <em>Set up and build</em>.</p></li>
       <li><h3>Play</h3><p>Press <em>Play</em> in the launcher. Online is in <em>Settings &rarr; Online</em>.</p></li>
     </ol>
-    <p class="small">Windows 10/11 64-bit, a Vulkan or Direct3D 11 GPU, your own game dumped from your own Switch. Linux and macOS are experimental. <a data-link="guide" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/INSTALL.md" rel="noopener">Install guide</a> &middot; <a href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/releases" rel="noopener">All releases</a></p>
+    <p class="small">Windows 10/11 64-bit, a Vulkan or Direct3D 11 GPU, your own game dumped from your own Switch. Linux and macOS are experimental.</p>
+    <div class="btn-row"><a class="navbtn" data-link="guide" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/INSTALL.md" rel="noopener">Install guide</a><a class="navbtn" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/releases" rel="noopener">All releases</a></div>
   </div>
 </section>
 
