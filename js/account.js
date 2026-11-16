@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
     else {
       if (cached) show(cached); // instant, from the saved session
       OSUSession.fetchUser().then(function (u) {
-        if (!u) { if (!cached) { status.classList.add("hidden"); } signedOut(); return; } // session ended (revoked or expired)
+        if (!u) { status.classList.add("hidden"); signedOut(); window.dispatchEvent(new Event("osu-session")); return; } // session ended (revoked or expired)
         if (!cached || cached.avatar !== u.avatar || cached.username !== u.username || cached.global_name !== u.global_name) show(u);
         window.dispatchEvent(new Event("osu-session"));
       }).catch(function (e) { if (!cached) fail(e.message); /* else stay on the cached profile while offline */ });
