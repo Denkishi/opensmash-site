@@ -21,11 +21,17 @@ LOBBIES = [
     "http://opensmash-lobby.duckdns.org:39421/leaderboard.json",
 ]
 STATUS_KEYS = ("online", "rooms", "arenas", "open_rooms", "playing")
-STATUS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "status.json")
+_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+# DATA_DIR: where the snapshots are written (the workflow checks the `data` branch out there). Default: repo root.
+_DATA = os.environ.get("DATA_DIR") or _ROOT
+# HEARTBEAT_S: rewrite an unchanged file when its "updated" is older than this, so the page can show a fresh age.
+# 0 (default) = never rewrite unchanged data.
+HEARTBEAT_S = int(os.environ.get("HEARTBEAT_S", "0") or 0)
+STATUS_PATH = os.path.join(_DATA, "status.json")
 TIMEOUT_S = 20
 MAX_PLAYERS = 10000
 TOP_PER_FIGHTER = 100
-OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "leaderboard.json")
+OUT_PATH = os.path.join(_DATA, "leaderboard.json")
 ID_RE = re.compile(r"^[0-9a-f]{16}$")
 
 FIGHTERS = {
@@ -146,7 +152,16 @@ def build(merged, now_iso):
 
 def same_data(a, b):
     strip = lambda d: {k: v for k, v in (d or {}).items() if k != "updated"}  # noqa: E731
-    return strip(a) == strip(b)
+    if strip(a) != strip(b):
+        return False
+    if HEARTBEAT_S > 0:  # unchanged, but old enough that the page would show a stale age: count it as changed
+        try:
+            t0 = datetime.strptime(a["updated"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            t1 = datetime.strptime(b["updated"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            return (t1 - t0).total_seconds() < HEARTBEAT_S
+        except (TypeError, KeyError, ValueError):
+            return False
+    return True
 
 
 def status_url(url):
@@ -210,6 +225,7 @@ def run(urls, out_path=OUT_PATH, fetcher=fetch, status_path=STATUS_PATH):
     if same_data(old, new):
         log("data unchanged (%d players): not rewriting" % new["ranked"])
         return 0
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     with open(out_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(new, f, ensure_ascii=False, separators=(",", ":"))
         f.write("\n")
@@ -272,6 +288,12 @@ def selftest():
         assert run(["http://c/l.json"], os.path.join(d, "l4.json"), fetcher, spath) == 0
         with open(spath) as f:
             assert json.load(f)["up"] is False
+    global HEARTBEAT_S
+    HEARTBEAT_S = 600
+    assert same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:05:00Z"})
+    assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:11:00Z"})
+    assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 2, "updated": "2026-01-01T00:00:01Z"})
+    HEARTBEAT_S = 0
     log("selftest ok")
     return 0
 

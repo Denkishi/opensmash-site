@@ -1,39 +1,52 @@
 name: Update leaderboard and status
 
+# One long-running job that snapshots the lobby (plain HTTP, so the HTTPS site cannot read it) every ~2.5 minutes
+# and writes status.json / leaderboard.json to the `data` branch (not served by Pages: no Pages builds).
+# The site reads https://raw.githubusercontent.com/Denkishi/opensmash-site/data/<file>.
+#
+# Reliability: GitHub's cron is best effort and often skipped, so the job loops for 5 h 50 m and then starts its own
+# successor with `gh workflow run`. GITHUB_TOKEN is allowed to do that: workflow_dispatch and repository_dispatch are
+# the two events that, unlike all others, DO create runs when sent with GITHUB_TOKEN (it needs actions: write).
+# The concurrency group keeps a single loop; the successor waits as "pending" until this one ends.
+# The hourly schedule is only a backup in case the chain ever breaks (failure, cancel).
+
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "23 * * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: leaderboard
   cancel-in-progress: false
 
 jobs:
-  update:
+  loop:
     runs-on: ubuntu-latest
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Self-test (offline)
         run: python .github/scripts/leaderboard.py --selftest
-      - name: Build leaderboard.json and status.json from the lobby server
-        run: python .github/scripts/leaderboard.py
-      - name: Commit when changed
-        run: |
-          # "updated" changes on every run: only commit when the data itself changed.
-          if git diff --quiet -- leaderboard.json status.json && [ -z "$(git ls-files --others --exclude-standard status.json)" ]; then
-            echo "leaderboard.json and status.json unchanged"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add leaderboard.json status.json
-          git commit -m "Update leaderboard and status"
-          git pull --rebase -q
-          git push
+      - name: Snapshot loop (5 h 50 m)
+        env:
+          DATA_DIR: ${{ github.workspace }}/data
+          HEARTBEAT_S: "600"
+          INTERVAL_S: "150"
+          LOOP_S: "21000"
+        run: bash .github/scripts/loop.sh
+      - name: Start the next loop
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run leaderboard.yml --ref "${{ github.event.repository.default_branch }}" --repo "${{ github.repository }}"
