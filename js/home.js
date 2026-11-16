@@ -61,14 +61,15 @@
       ["#", "Player", "GSP"].forEach(function (c, i) { head.appendChild(cell("th", i === 2 ? "num" : "", c)); });
       rows = ((board.fighters[kind] || {}).top || []).slice(0, TOP).map(function (p) { return [p.rank, p.name, null, p.gsp]; });
     } else {
-      ["#", "Player", "Best fighter", "GSP"].forEach(function (c, i) { head.appendChild(cell("th", i === 3 ? "num" : "", c)); });
+      ["#", "Player", "GSP"].forEach(function (c, i) { head.appendChild(cell("th", i === 2 ? "num" : "", c)); });
       rows = board.players.slice(0, TOP).map(function (p) { return [p.rank, p.name, p.fighter != null ? fighterName(p.fighter) : "-", p.gsp]; });
     }
     rows.forEach(function (r) {
       var tr = document.createElement("tr");
       tr.appendChild(cell("td", "pos", "#" + r[0]));
-      tr.appendChild(cell("td", "", r[1] || "Anonymous"));
-      if (r[2] !== null) tr.appendChild(cell("td", "", r[2]));
+      var pc = cell("td", "", r[1] || "Anonymous");
+      if (r[2] !== null) pc.appendChild(cell("small", "fn", r[2]));
+      tr.appendChild(pc);
       tr.appendChild(cell("td", "num", String(r[3])));
       body.appendChild(tr);
     });

@@ -2,15 +2,15 @@
 
 The site of [OpenSmash-Ultimate](https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate), a native PC port of
 *Super Smash Bros. Ultimate*: live online stats and the GSP leaderboard first, then install. Plain static HTML, CSS and
-JavaScript: no build step, no framework, no images beyond the logo and icons, no trackers, no third-party requests.
-Light and dark follow the visitor's system. GPL-3.0 like the project. Not affiliated with Nintendo.
+JavaScript: no build step, no framework, no screenshots; only the logo, icons and the social card, no trackers, no third-party requests.
+GPL-3.0 like the project. Not affiliated with Nintendo.
 
 ## Files
 
 | Path | What it is |
 |---|---|
-| `index.html`, `css/home.css`, `js/home.js` | the home page: live counts, top 10 (overall or per fighter), install |
-| `css/style.css`, `css/theme.css` | the shared design and the light theme |
+| `index.html`, `css/home.css`, `js/hero.js`, `js/home.js`, `js/nav-login.js` | the home page: hero, live counts, top 10 (overall or per fighter), install, the Register / Log in button |
+| `css/style.css` | the shared design |
 | `config.js` | links: repository, Discord |
 | `leaderboard/`, `account/`, `css/pages.css`, `js/leaderboard.js`, `js/account.js`, `js/page.js` | full leaderboard; Discord sign-in and your own GSP |
 | `leaderboard.json`, `status.json` | snapshots of the lobby, rewritten by the workflow |
