@@ -18,9 +18,10 @@ import urllib.request
 from datetime import datetime, timezone
 
 LOBBIES = [
-    "http://smash.recomps.wtf:39421/leaderboard.json",
     "http://opensmash-lobby.duckdns.org:39421/leaderboard.json",
 ]
+STATUS_KEYS = ("online", "rooms", "arenas", "open_rooms", "playing")
+STATUS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "status.json")
 TIMEOUT_S = 20
 MAX_PLAYERS = 10000
 TOP_PER_FIGHTER = 100
@@ -148,8 +149,54 @@ def same_data(a, b):
     return strip(a) == strip(b)
 
 
-def run(urls, out_path=OUT_PATH, fetcher=fetch):
+def status_url(url):
+    return url.rsplit("/", 1)[0] + "/status.json"
+
+
+def build_status(docs, ranked, now_iso):
+    """Sum the lobbies' aggregate counts. docs: parsed /status.json documents (counts only)."""
+    out = {"updated": now_iso, "up": True}
+    for k in STATUS_KEYS:
+        out[k] = sum(n for n in (_int(d.get(k)) for d in docs if isinstance(d, dict)) if n is not None)
+    out["ranked"] = ranked
+    return out
+
+
+def write_if_changed(path, new):
+    old = None
+    try:
+        with open(path, encoding="utf-8") as f:
+            old = json.load(f)
+    except (OSError, ValueError):
+        pass
+    if same_data(old, new):
+        return False
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(new, f, ensure_ascii=False, separators=(",", ":"))
+        f.write("\n")
+    return True
+
+
+def run_status(urls, ranked, status_path, fetcher, board_up):
+    """status.json: live counts. A lobby without /status.json yet is skipped (the file is left alone); when no lobby
+    answers at all the file says {"up": false}."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    docs = [d for d in (fetcher(status_url(u)) for u in urls) if d is not None]
+    if docs:
+        new = build_status(docs, ranked, now)
+    elif not board_up:
+        new = {"updated": now, "up": False}
+    else:
+        log("no lobby serves /status.json yet: leaving status.json alone")
+        return
+    log("status.json %s" % ("written" if write_if_changed(status_path, new) else "unchanged"))
+
+
+def run(urls, out_path=OUT_PATH, fetcher=fetch, status_path=STATUS_PATH):
     docs = [d for d in (fetcher(u) for u in urls) if d is not None]
+    if status_path:
+        ranked = sum(_int(d.get("ranked")) or 0 for d in docs if isinstance(d, dict))
+        run_status(urls, ranked, status_path, fetcher, bool(docs))
     if not docs:
         log("no lobby answered: leaving leaderboard.json alone")
         return 0
@@ -199,17 +246,32 @@ def selftest():
         empty = {"updated": None, "ranked": 0, "players": [], "fighters": {}}
         with open(path, "w") as f:
             json.dump(empty, f)
-        assert run(["http://c/l.json"], path, fetcher) == 0
+        assert run(["http://c/l.json"], path, fetcher, None) == 0
         with open(path) as f:
             assert json.load(f) == empty, "must not change when no lobby answers"
-        assert run(urls, path, fetcher) == 0
+        assert run(urls, path, fetcher, None) == 0
         with open(path) as f:
             first_text = f.read()
         first = json.loads(first_text)
         assert first["ranked"] == 2 and first["updated"]
-        assert run(urls, path, fetcher) == 0
+        assert run(urls, path, fetcher, None) == 0
         with open(path) as f:
             assert f.read() == first_text, "unchanged data must not rewrite"
+        spath = os.path.join(d, "status.json")
+        st = {"http://a/status.json": {"online": 3, "rooms": 2, "arenas": 1, "open_rooms": 1, "playing": 2, "x": 1}}
+        sf = lambda u: st.get(u) or docs.get(u)  # noqa: E731
+        assert run(["http://a/l.json"], os.path.join(d, "l2.json"), sf, spath) == 0
+        with open(spath) as f:
+            got = json.load(f)
+        assert got["up"] is True and got["online"] == 3 and got["rooms"] == 2 and got["ranked"] == 2 and "x" not in got, got
+        # a lobby that does not serve /status.json yet: file left alone
+        assert run(["http://b/l.json"], os.path.join(d, "l3.json"), fetcher, spath) == 0
+        with open(spath) as f:
+            assert json.load(f)["online"] == 3
+        # nothing answers: marked down
+        assert run(["http://c/l.json"], os.path.join(d, "l4.json"), fetcher, spath) == 0
+        with open(spath) as f:
+            assert json.load(f)["up"] is False
     log("selftest ok")
     return 0
 

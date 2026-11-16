@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function playerCell(p) {
     var td = OSU.el("td"), box = OSU.el("div", "player");
-    box.appendChild(OSU.el("span", "initial", (p.name || "?").charAt(0).toUpperCase()));
-    box.appendChild(OSU.el("span", null, p.name));
+    box.appendChild(OSU.el("span", "initial", (p.name || "A").charAt(0).toUpperCase()));
+    box.appendChild(OSU.el("span", null, p.name || "Anonymous"));
     td.appendChild(box);
     return td;
   }
@@ -21,7 +21,6 @@ document.addEventListener("DOMContentLoaded", function () {
     headRow([["#", ""], ["Player", ""], ["Best fighter", ""], ["GSP", "num"]]);
     rows.textContent = "";
     data.players.forEach(function (p) {
-      if (!p.name) return; // anonymous players are not listed (their global rank numbers stay)
       var tr = OSU.el("tr");
       tr.appendChild(OSU.el("td", "pos", "#" + p.rank));
       tr.appendChild(playerCell(p));
@@ -35,7 +34,6 @@ document.addEventListener("DOMContentLoaded", function () {
     headRow([["#", ""], ["Player", ""], ["GSP with " + f.name, "num"]]);
     rows.textContent = "";
     (f.top || []).forEach(function (p) {
-      if (!p.name) return;
       var tr = OSU.el("tr");
       tr.appendChild(OSU.el("td", "pos", "#" + p.rank));
       tr.appendChild(playerCell(p));
