@@ -7,15 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function playerCell(p) {
     var td = OSU.el("td"), box = OSU.el("div", "player");
-    var url = OSU.discordAvatar(p.discord_id, p.avatar, 64);
-    if (url) {
-      var img = OSU.el("img", "avatar sm");
-      img.src = url; img.alt = ""; img.width = 28; img.height = 28; img.loading = "lazy";
-      box.appendChild(img);
-    } else {
-      box.appendChild(OSU.el("span", "initial", (p.name || "?").charAt(0).toUpperCase()));
-    }
-    box.appendChild(OSU.el("span", null, p.name || "Player"));
+    box.appendChild(OSU.el("span", "initial", (p.name || "?").charAt(0).toUpperCase()));
+    box.appendChild(OSU.el("span", null, p.name));
     td.appendChild(box);
     return td;
   }
@@ -28,10 +21,11 @@ document.addEventListener("DOMContentLoaded", function () {
     headRow([["#", ""], ["Player", ""], ["Best fighter", ""], ["GSP", "num"]]);
     rows.textContent = "";
     data.players.forEach(function (p) {
+      if (!p.name) return; // anonymous players are not listed (their global rank numbers stay)
       var tr = OSU.el("tr");
       tr.appendChild(OSU.el("td", "pos", "#" + p.rank));
       tr.appendChild(playerCell(p));
-      tr.appendChild(OSU.el("td", null, p.best_fighter != null ? OSU.fighterName(data, p.best_fighter) : "-"));
+      tr.appendChild(OSU.el("td", null, p.fighter != null ? OSU.fighterName(data, p.fighter) : "-"));
       tr.appendChild(OSU.el("td", "num", String(p.gsp)));
       rows.appendChild(tr);
     });
@@ -41,6 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
     headRow([["#", ""], ["Player", ""], ["GSP with " + f.name, "num"]]);
     rows.textContent = "";
     (f.top || []).forEach(function (p) {
+      if (!p.name) return;
       var tr = OSU.el("tr");
       tr.appendChild(OSU.el("td", "pos", "#" + p.rank));
       tr.appendChild(playerCell(p));
@@ -52,6 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
   OSU.loadBoard().then(function (d) {
     data = d;
     if (!d.players.length) {
+      $("note").classList.add("hidden");
       status.textContent = "No ranked players yet. The leaderboard fills in once players have played online and the first update has run.";
       return;
     }

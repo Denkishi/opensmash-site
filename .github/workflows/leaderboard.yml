@@ -20,11 +20,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Build leaderboard.json from Epic Online Services
-        env:
-          EOS_CLIENT_ID: ${{ secrets.EOS_CLIENT_ID }}
-          EOS_CLIENT_SECRET: ${{ secrets.EOS_CLIENT_SECRET }}
-          EOS_DEPLOYMENT_ID: ${{ secrets.EOS_DEPLOYMENT_ID }}
+      - name: Self-test (offline)
+        run: python .github/scripts/leaderboard.py --selftest
+      - name: Build leaderboard.json from the lobby servers
         run: python .github/scripts/leaderboard.py
       - name: Commit when changed
         run: |

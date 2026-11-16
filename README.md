@@ -20,7 +20,7 @@ the slashes, the social card and the screenshot fallbacks are original (SVG, CSS
 | `assets/screens/` | your screenshots (see below) |
 | `account/`, `leaderboard/`, `js/account.js`, `js/leaderboard.js`, `js/page.js`, `css/pages.css` | Discord sign-in and the leaderboard (below) |
 | `leaderboard.json` | the leaderboard data, rewritten by the workflow |
-| `.github/workflows/leaderboard.yml`, `.github/scripts/leaderboard.py` | builds `leaderboard.json` from Epic Online Services |
+| `.github/workflows/leaderboard.yml`, `.github/scripts/leaderboard.py` | builds `leaderboard.json` from the lobby servers |
 | `404.html`, `robots.txt`, `.nojekyll` | GitHub Pages extras |
 
 ## Turn on GitHub Pages
@@ -72,17 +72,21 @@ trying. The endpoint sends `Access-Control-Allow-Origin: *`, so any page may rea
 
 `leaderboard/` shows the ranking (overall and per fighter); `account/` lets a player sign in with Discord and see their own
 position, GSP and per-fighter GSP. Both read `leaderboard.json`, which starts empty and is rewritten every 30 minutes by the
-**Update leaderboard** workflow (also runnable by hand from the Actions tab).
+**Update leaderboard** workflow (also runnable by hand from the Actions tab). No secrets are needed.
 
-- The game publishes GSP to Epic Online Services (EOS) stats: `GSP_TOP` (overall) and `GSP_F<n>` per fighter kind `n`.
-- The workflow needs three repository secrets (Settings > Secrets and variables > Actions): `EOS_CLIENT_ID`,
-  `EOS_CLIENT_SECRET`, `EOS_DEPLOYMENT_ID`. Without them it does nothing and the leaderboard stays empty.
-- The EOS client behind them needs a policy allowing it to read leaderboards, stats and Connect user data. The stats
-  (`GSP_TOP`, `GSP_F0`..`GSP_F93`, aggregation LATEST) and a leaderboard `GSP_TOP` (stat `GSP_TOP`, descending) must exist in the
-  EOS Developer Portal. Run `python .github/scripts/leaderboard.py --selftest` to test the script offline.
-- Discord sign-in is OAuth2 with PKCE in the browser (no server, no secret). The redirect
-  `https://denkishi.github.io/opensmash-site/account/` must be listed in the Discord application's OAuth2 settings; if the
-  site moves, change `REDIRECT_URI` in `js/account.js` and that list together.
+- Data source: the public lobby servers. Each serves `http://<host>:39421/leaderboard.json` (hosts `smash.recomps.wtf` and
+  `opensmash-lobby.duckdns.org`; the list is at the top of `.github/scripts/leaderboard.py`, or set the `LOBBIES` environment
+  variable, comma-separated). The script merges players by their opaque id (highest GSP per fighter across lobbies),
+  recomputes global positions and commits `leaderboard.json` only when the data changed. If no lobby answers (for example
+  before the servers are redeployed) it exits 0 and changes nothing. Test offline with
+  `python .github/scripts/leaderboard.py --selftest`.
+- Only players who chose "Show my name on the leaderboard" (OpenSmash.exe or the web launcher's Discord card) carry a name
+  and a hashed Discord id; the leaderboard page lists only those, the others stay anonymous but keep their global position.
+  The account page hashes your Discord id in the browser (`sha256("opensmash-discord\n" + id)`, first 16 hex characters) to find your row.
+- Owner setup: (1) redeploy the lobby servers with `tools/deploy/deploy_online_lobby.sh` from OpenSmash-Ultimate so they serve
+  the file; (2) list the redirect `https://denkishi.github.io/opensmash-site/account/` in the Discord application's OAuth2
+  redirects (if the site moves, change `REDIRECT_URI` in `js/account.js` and that list together); (3) run the workflow once.
+- Discord sign-in is OAuth2 with PKCE in the browser (no server, no secret).
 
 ## Screenshots
 

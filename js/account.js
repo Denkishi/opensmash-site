@@ -82,6 +82,15 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  /* The lobbies publish sha256("opensmash-discord\n" + Discord user id), first 16 hex characters, never the id itself. */
+  function discordHash(id) {
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode("opensmash-discord\n" + id)).then(function (buf) {
+      var a = new Uint8Array(buf), s = "";
+      for (var i = 0; i < 8; i++) s += (a[i] < 16 ? "0" : "") + a[i].toString(16);
+      return s;
+    });
+  }
+
   function show(user) {
     $("name").textContent = user.global_name || user.username || "Player";
     $("handle").textContent = user.username ? "@" + user.username : "";
@@ -90,16 +99,22 @@ document.addEventListener("DOMContentLoaded", function () {
     $("signed-out").classList.add("hidden");
     $("signed-in").classList.remove("hidden");
 
-    OSU.loadBoard().then(function (d) {
-      var me = null;
-      d.players.forEach(function (p) { if (p.discord_id && String(p.discord_id) === String(user.id)) me = p; });
+    discordHash(user.id).then(function (h) {
+      return OSU.loadBoard().then(function (d) { return [d, h]; });
+    }).then(function (res) {
+      var d = res[0], h = res[1], me = null;
+      d.players.forEach(function (p) { if (p.discord && String(p.discord).toLowerCase() === h) me = p; });
       var t = d.updated && OSU.fmtTime(d.updated);
       if (t) $("updated").textContent = "Leaderboard updated " + t;
-      if (!me) { $("unranked").classList.remove("hidden"); return; }
+      if (!me) {
+        $("unranked").textContent = "You are not on the leaderboard yet. Either you have not played a ranked online match, or you have not chosen to show your name: turn on \"Show my name on the leaderboard\" in OpenSmash.exe or in the web launcher's Discord card, then play online.";
+        $("unranked").classList.remove("hidden");
+        return;
+      }
       $("rank").textContent = "#" + me.rank;
       $("rank").classList.remove("hidden");
       $("overall-gsp").textContent = String(me.gsp);
-      $("overall-best").textContent = me.best_fighter != null ? OSU.fighterName(d, me.best_fighter) : "-";
+      $("overall-best").textContent = me.fighter != null ? OSU.fighterName(d, me.fighter) : "-";
       $("overall").classList.remove("hidden");
       var f = me.fighters || {};
       var kinds = Object.keys(f).sort(function (a, b) { return f[b].gsp - f[a].gsp; });
