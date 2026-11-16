@@ -18,6 +18,9 @@ the slashes, the social card and the screenshot fallbacks are original (SVG, CSS
 | `assets/emblem.svg`, `assets/favicon.svg`, `assets/favicon-32.png`, `assets/apple-touch-icon.png` | the emblem and icons |
 | `assets/og-image.png` | the social card (1200x630); its source is `assets/og/og-image.html` |
 | `assets/screens/` | your screenshots (see below) |
+| `account/`, `leaderboard/`, `js/account.js`, `js/leaderboard.js`, `js/page.js`, `css/pages.css` | Discord sign-in and the leaderboard (below) |
+| `leaderboard.json` | the leaderboard data, rewritten by the workflow |
+| `.github/workflows/leaderboard.yml`, `.github/scripts/leaderboard.py` | builds `leaderboard.json` from the lobby servers |
 | `404.html`, `robots.txt`, `.nojekyll` | GitHub Pages extras |
 
 ## Turn on GitHub Pages
@@ -64,6 +67,26 @@ Counts only: the lobby never puts addresses, names or lobby codes in it.
 
 With `STATUS_URL` empty the box says **Not configured**; when the lobby does not answer it says **Offline** and keeps
 trying. The endpoint sends `Access-Control-Allow-Origin: *`, so any page may read it.
+
+## Leaderboard and Discord sign-in
+
+`leaderboard/` shows the ranking (overall and per fighter); `account/` lets a player sign in with Discord and see their own
+position, GSP and per-fighter GSP. Both read `leaderboard.json`, which starts empty and is rewritten every 30 minutes by the
+**Update leaderboard** workflow (also runnable by hand from the Actions tab). No secrets are needed.
+
+- Data source: the public lobby servers. Each serves `http://<host>:39421/leaderboard.json` (hosts `smash.recomps.wtf` and
+  `opensmash-lobby.duckdns.org`; the list is at the top of `.github/scripts/leaderboard.py`, or set the `LOBBIES` environment
+  variable, comma-separated). The script merges players by their opaque id (highest GSP per fighter across lobbies),
+  recomputes global positions and commits `leaderboard.json` only when the data changed. If no lobby answers (for example
+  before the servers are redeployed) it exits 0 and changes nothing. Test offline with
+  `python .github/scripts/leaderboard.py --selftest`.
+- Only players who chose "Show my name on the leaderboard" (OpenSmash.exe or the web launcher's Discord card) carry a name
+  and a hashed Discord id; the leaderboard page lists only those, the others stay anonymous but keep their global position.
+  The account page hashes your Discord id in the browser (`sha256("opensmash-discord\n" + id)`, first 16 hex characters) to find your row.
+- Owner setup: (1) redeploy the lobby servers with `tools/deploy/deploy_online_lobby.sh` from OpenSmash-Ultimate so they serve
+  the file; (2) list the redirect `https://denkishi.github.io/opensmash-site/account/` in the Discord application's OAuth2
+  redirects (if the site moves, change `REDIRECT_URI` in `js/account.js` and that list together); (3) run the workflow once.
+- Discord sign-in is OAuth2 with PKCE in the browser (no server, no secret).
 
 ## Screenshots
 
