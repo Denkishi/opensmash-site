@@ -25,10 +25,7 @@
       return e;
     },
     loadBoard: function () {
-      return fetch("../leaderboard.json", { cache: "no-store" }).then(function (r) {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.json();
-      }).then(function (d) {
+      return OSUData.load("leaderboard.json", "../").then(function (d) {
         if (!d || !Array.isArray(d.players)) throw new Error("bad file");
         d.fighters = d.fighters || {};
         return d;
@@ -51,7 +48,9 @@
     },
     fmtTime: function (iso) {
       var d = new Date(iso);
-      return isNaN(d) ? null : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+      if (isNaN(d)) return null;
+      var a = OSUData.ago(iso);
+      return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) + (a ? " (" + a.text + ")" : "");
     }
   };
 })();

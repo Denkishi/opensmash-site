@@ -1,26 +1,17 @@
 /* Home page: live lobby counts (status.json) and the top of the leaderboard (leaderboard.json). Both are snapshots
-   written every few minutes by .github/workflows/leaderboard.yml (the lobby is plain HTTP; this page is HTTPS). */
+   written every few minutes by .github/workflows/leaderboard.yml to the `data` branch (the lobby is plain HTTP; this
+   page is HTTPS); js/snapshot.js loads them. The "Updated x min ago" labels tick every 30 s between fetches. */
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var STALE_MIN = 45, REFRESH_MS = 60000, TOP = 10;
-  var board = null;
+  var STALE_MIN = 20, REFRESH_MS = 60000, TICK_MS = 30000, TOP = 10;
+  var board = null, lastStatus = null;
 
-  function get(url) {
-    return fetch(url, { cache: "no-store" }).then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    });
-  }
-  function ago(iso) {
-    var t = Date.parse(iso);
-    if (isNaN(t)) return null;
-    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return { min: m, text: m < 1 ? "just now" : m < 60 ? m + " min ago" : Math.round(m / 60) + " h ago" };
-  }
+  var ago = OSUData.ago;
   function num(v) { return typeof v === "number" && isFinite(v) ? String(v) : "-"; }
 
   function showStatus(s) {
+    lastStatus = s;
     var pill = $("pill"), txt = $("pill-text"), upd = $("upd");
     var keys = ["online", "rooms", "arenas", "ranked"];
     function dashes() {
@@ -86,17 +77,21 @@
     if (sel.value !== keep) sel.value = "";
   }
 
+  function tickBoardAge() {
+    var a = board && ago(board.updated);
+    $("board-upd").textContent = a ? "Updated " + a.text : "";
+  }
+
   function refresh() {
-    get("status.json").then(showStatus).catch(function () { showStatus(null); });
-    get("leaderboard.json").then(function (d) {
+    OSUData.load("status.json").then(showStatus).catch(function () { showStatus(null); });
+    OSUData.load("leaderboard.json").then(function (d) {
       if (!d || !Array.isArray(d.players)) throw new Error("bad file");
       d.fighters = d.fighters || {};
       board = d;
       fillSelect();
       render($("fighter").value);
       if ($("t-ranked").textContent === "-" && typeof d.ranked === "number") $("t-ranked").textContent = String(d.ranked);
-      var a = ago(d.updated);
-      $("board-upd").textContent = a ? "Updated " + a.text : "";
+      tickBoardAge();
     }).catch(function () { board = null; render(""); });
   }
 
@@ -113,5 +108,6 @@
     $("fighter").addEventListener("change", function () { render(this.value); });
     refresh();
     setInterval(refresh, REFRESH_MS);
+    setInterval(function () { if (lastStatus) showStatus(lastStatus); tickBoardAge(); }, TICK_MS);
   });
 })();
