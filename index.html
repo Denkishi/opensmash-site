@@ -3,387 +3,125 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OpenSmash-Ultimate: recompiled, not emulated</title>
-<meta name="description" content="OpenSmash-Ultimate is an open-source native PC port of Super Smash Bros. Ultimate made by static recompilation: the Switch code translated to C and compiled for Windows, no emulator. Build it from your own game with a one-click installer. GPL-3.0. Not affiliated with Nintendo.">
+<title>OpenSmash-Ultimate: play Smash Ultimate online on PC</title>
+<meta name="description" content="OpenSmash-Ultimate is an open-source native PC port of Super Smash Bros. Ultimate with online play, GSP ranked matches and a public leaderboard. Live players, rooms and rankings. Not affiliated with Nintendo.">
 <meta name="theme-color" content="#050505">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="dark light">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<!-- Open Graph / social card. Social sites want absolute URLs: after enabling GitHub Pages, replace
-     "assets/og-image.png" and og:url with the full https:// address of the site (see README.md). -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="OpenSmash-Ultimate: recompiled, not emulated">
-<meta property="og:description" content="A native PC port made by static recompilation. Vulkan renderer, one-click installer, fighters as C++ source, online in development. Open source, GPL-3.0. Not affiliated with Nintendo.">
-<meta property="og:image" content="https://denkishi.github.io/opensmash-site/assets/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="OpenSmash-Ultimate: white diagonal slashes on black with the project name">
+<meta property="og:title" content="OpenSmash-Ultimate: play Smash Ultimate online on PC">
+<meta property="og:description" content="Native PC port by static recompilation. Online play, GSP ranked, live leaderboard. Open source, GPL-3.0. Not affiliated with Nintendo.">
 <meta property="og:url" content="https://denkishi.github.io/opensmash-site/">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="OpenSmash-Ultimate: recompiled, not emulated">
-<meta name="twitter:description" content="Native PC port by static recompilation. Open source, GPL-3.0. Not affiliated with Nintendo.">
-<meta name="twitter:image" content="https://denkishi.github.io/opensmash-site/assets/og-image.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="css/style.css">
-<script>document.documentElement.className += " js";</script>
+<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/theme.css">
 <script src="config.js"></script>
-<script src="js/main.js" defer></script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"OpenSmash-Ultimate","applicationCategory":"GameApplication","operatingSystem":"Windows 10, Windows 11 (x64)","license":"https://www.gnu.org/licenses/gpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Open-source native PC port of Super Smash Bros. Ultimate by static recompilation. Build it from your own game. Not affiliated with Nintendo."}
-</script>
+<script src="js/home.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
-<!-- reusable emblem -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <defs>
-    <mask id="emblem-cut" maskContentUnits="userSpaceOnUse">
-      <rect width="100" height="100" fill="#fff"/>
-      <polygon points="55,-4 71,-4 45,104 29,104" fill="#000"/>
-    </mask>
-    <symbol id="emblem" viewBox="0 0 100 100">
-      <path mask="url(#emblem-cut)" fill="currentColor" fill-rule="evenodd" d="M18 88 L40 12 H92 L70 88 Z M35 74 H59 L73 26 H49 Z"/>
-      <polygon class="emblem-slash" points="63,0 68,0 42,100 37,100" fill="#ff3b30"/>
-    </symbol>
-  </defs>
-</svg>
-
 <header class="nav" id="top">
   <a class="brand" href="#top" aria-label="OpenSmash-Ultimate, back to top">
-    <img class="brand-mark" src="assets/emblem-white.svg" alt="" aria-hidden="true">
+    <img class="brand-mark" src="assets/emblem-white.svg" width="34" height="34" alt="" aria-hidden="true">
     <span class="brand-word">OPENSMASH<span>-ULTIMATE</span></span>
   </a>
   <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span class="sr">Menu</span></button>
   <nav id="nav-links" class="nav-links" aria-label="Sections">
-    <a href="#what">What</a>
-    <a href="#features">Features</a>
-    <a href="#install">Install</a>
     <a href="#online">Online</a>
-    <a href="#roadmap">Roadmap</a>
-    <a href="#faq">FAQ</a>
+    <a href="#install">Install</a>
     <a href="leaderboard/">Leaderboard</a>
     <a href="account/">Account</a>
+    <a data-link="discord" href="https://discord.gg/pkgyYGf3YB" rel="noopener">Discord</a>
     <a class="nav-cta" data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener">GitHub</a>
   </nav>
 </header>
 
-<main id="main">
+<main id="main" class="home">
 
-<!-- ========== HERO ========== -->
-<section class="hero" aria-labelledby="hero-title">
-  <canvas class="hero-canvas" aria-hidden="true"></canvas>
-  <div class="hero-slashes" aria-hidden="true">
-    <i class="slash s1"></i><i class="slash s2"></i><i class="slash s3"></i><i class="slash s4"></i><i class="slash s5"></i>
-  </div>
-  <div class="hero-vert" aria-hidden="true">NATIVE&nbsp;/&nbsp;PC&nbsp;/&nbsp;OPEN&nbsp;SOURCE</div>
-  <div class="hero-inner" data-parallax="0.12">
-    <p class="kicker"><span class="dot"></span>Static recompilation &middot; GPL-3.0 &middot; Windows x64</p>
-    <h1 id="hero-title" class="hero-title">
-      <span class="line l1"><span>OPEN</span><span class="red">SMASH</span></span>
-      <span class="line l2"><span class="outline">ULTIMATE</span></span>
-    </h1>
-    <p class="tagline"><strong>Recompiled, not emulated.</strong> The Switch game's code, translated to C and compiled into a real Windows program. Built on your PC, from your own copy.</p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="#install"><span>Get it</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h12M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5"/></svg></a>
-      <a class="btn btn-ghost" data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z"/></svg><span>GitHub</span></a>
-      <a class="btn btn-ghost" data-link="discord" href="#community"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18 18 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.5C.6 9.1-.3 13.7.1 18.2a19.8 19.8 0 0 0 6 3l1.3-2.1a12.8 12.8 0 0 1-2-1l.5-.4a14 14 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.7 19.7 0 0 0 6-3c.5-5.2-.8-9.8-3.6-13.8zM8 15.4c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.6 8 10.6s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg><span data-label>Discord</span></a>
-    </div>
-    <ul class="chips" aria-label="At a glance">
-      <li>Direct3D 11 &middot; Vulkan &middot; Metal</li><li>Game 13.0.5</li><li>One-click installer</li><li>No game files included</li>
-    </ul>
-  </div>
-  <a class="scroll-cue" href="#what" aria-label="Scroll to: what it is"><span></span></a>
-  <div class="hero-cut" aria-hidden="true"></div>
-</section>
-
-<!-- ========== MARQUEE BAND ========== -->
-<div class="band" aria-hidden="true">
-  <div class="band-track">
-    <span>NO EMULATOR</span><b>/</b><span>NO JIT</span><b>/</b><span>NATIVE X64</span><b>/</b><span>VULKAN</span><b>/</b><span>OPEN SOURCE</span><b>/</b><span>YOUR GAME, YOUR PC</span><b>/</b>
-    <span>NO EMULATOR</span><b>/</b><span>NO JIT</span><b>/</b><span>NATIVE X64</span><b>/</b><span>VULKAN</span><b>/</b><span>OPEN SOURCE</span><b>/</b><span>YOUR GAME, YOUR PC</span><b>/</b>
-  </div>
-</div>
-
-<!-- ========== WHAT IT IS ========== -->
-<section id="what" class="section what" aria-labelledby="what-title">
+<!-- ========== ONLINE: the centrepiece ========== -->
+<section id="online" aria-labelledby="online-title">
   <div class="wrap">
-    <p class="eyebrow reveal">01 / What it is</p>
-    <h2 id="what-title" class="big reveal">NOT AN<br><span class="outline">EMULATOR.</span></h2>
-    <div class="what-grid">
-      <p class="lead reveal">OpenSmash-Ultimate turns the Nintendo Switch version of <em>Super Smash Bros. Ultimate</em> into a normal Windows program, <strong>ahead of time</strong>. There is no CPU interpreter and no JIT running while you play: the console's system libraries (files, audio, video, input, threads, graphics) are re-implemented by the project's own runtime.</p>
-      <ol class="pipeline" aria-label="How it works">
-        <li class="reveal"><span class="pnum">A</span><span class="ptitle">Your dump</span><span class="ptext">The game you own, dumped from your console. Never in this project.</span></li>
-        <li class="reveal"><span class="pnum">B</span><span class="ptitle">AArch64 &rarr; C</span><span class="ptext">One C function per game function, checked against a CPU emulator on 32,043 instruction cases.</span></li>
-        <li class="reveal"><span class="pnum">C</span><span class="ptitle">Compiled for Windows</span><span class="ptext">clang builds a game DLL; the runtime brings the console's services and NVN on Vulkan.</span></li>
-        <li class="reveal"><span class="pnum">D</span><span class="ptitle">Play</span><span class="ptext">A resizable 16:9 window, your GPU, any controller. Saves stay on your PC.</span></li>
-      </ol>
-    </div>
-  </div>
-</section>
+    <h1 id="online-title">Smash Ultimate on PC. <span>Online.</span></h1>
+    <p class="sub">An open-source native port of Super Smash Bros. Ultimate with rollback online play, GSP ranked matches and a public leaderboard.</p>
 
-<!-- ========== SCREENSHOTS ==========
-     Screenshot slots: put your own captures (from your own build) at
-       assets/screens/01.jpg  02.jpg  03.jpg  04.jpg  05.jpg  (16:9, about 1600x900, under 300 KB each)
-     A missing file shows the drawn fallback, so the page always looks complete. Captions are below each slot. -->
-<section class="section shots" aria-labelledby="shots-title">
-  <div class="wrap">
-    <p class="eyebrow reveal">02 / On screen</p>
-    <h2 id="shots-title" class="big reveal">RUNNING<br><span class="outline">NATIVELY.</span></h2>
-  </div>
-  <div class="shots-rail">
-    <figure class="shot reveal" style="--h:0">
-      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>01</span></div>
-        <img src="assets/screens/01.jpg" alt="Waluigi, a new fighter, in a match against Donkey Kong" loading="lazy" decoding="async" width="1600" height="900"></div>
-      <figcaption>A match, natively on Windows &mdash; with Waluigi as a new fighter</figcaption>
-    </figure>
-    <figure class="shot reveal" style="--h:1">
-      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>02</span></div>
-        <img src="assets/screens/02.jpg" alt="The game's Online menu" loading="lazy" decoding="async" width="1600" height="900"></div>
-      <figcaption>The game's own Online menu</figcaption>
-    </figure>
-    <figure class="shot reveal" style="--h:2">
-      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>03</span></div>
-        <img src="assets/screens/03.jpg" alt="The settings menu over the running game" loading="lazy" decoding="async" width="1600" height="900"></div>
-      <figcaption>In-game settings menu (F1)</figcaption>
-    </figure>
-    <figure class="shot reveal" style="--h:3">
-      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>04</span></div>
-        <img src="assets/screens/04.jpg" alt="A match drawn by the Vulkan renderer" loading="lazy" decoding="async" width="1600" height="900"></div>
-      <figcaption>The Vulkan renderer, in a match</figcaption>
-    </figure>
-    <figure class="shot reveal" style="--h:4">
-      <div class="shot-frame"><div class="shot-fallback" aria-hidden="true"><i></i><i></i><i></i><span>05</span></div>
-        <img src="assets/screens/05.jpg" alt="The select screen with new fighters in an extra row" loading="lazy" decoding="async" width="1600" height="900"></div>
-      <figcaption>New fighters on the select screen</figcaption>
-    </figure>
-  </div>
-</section>
-
-<!-- ========== NUMBERS ========== -->
-<section class="numbers" aria-label="Measured numbers">
-  <div class="wrap nums">
-    <div class="num reveal"><b data-count="32043">32,043</b><span>instruction tests, 0 differences from the original CPU behaviour</span></div>
-    <div class="num reveal"><b data-count="1100" data-prefix="~">~1,100</b><span>console system-library entry points re-implemented</span></div>
-    <div class="num reveal"><b data-count="95" data-suffix="%">95%</b><span>of fighter move scripts turned into equivalent C++ source</span></div>
-    <div class="num reveal"><b>59&ndash;60</b><span>fps in fights, measured on an NVIDIA GPU and an Intel iGPU</span></div>
-  </div>
-</section>
-
-<!-- ========== FEATURES ========== -->
-<section id="features" class="section features" aria-labelledby="feat-title">
-  <div class="wrap">
-    <p class="eyebrow reveal">03 / Features</p>
-    <div class="head-row">
-      <h2 id="feat-title" class="big reveal">WHAT'S<br><span class="outline">IN THE BOX.</span></h2>
-      <div class="filters reveal" role="group" aria-label="Filter features by status">
-        <button class="filter is-on" data-filter="all" aria-pressed="true">All</button>
-        <button class="filter" data-filter="done" aria-pressed="false">Done</button>
-        <button class="filter" data-filter="exp" aria-pressed="false">Experimental</button>
-        <button class="filter" data-filter="wip" aria-pressed="false">In progress</button>
+    <div class="live">
+      <div class="live-head">
+        <span class="pill" id="pill" role="status" aria-live="polite" data-s=""><i></i><span id="pill-text">Checking&hellip;</span></span>
+        <span class="small" id="upd"></span>
       </div>
+      <div class="tiles">
+        <div class="tile"><b id="t-online">-</b><span>Playing now</span></div>
+        <div class="tile"><b id="t-rooms">-</b><span>Rooms</span></div>
+        <div class="tile"><b id="t-arenas">-</b><span>Arenas</span></div>
+        <div class="tile"><b id="t-ranked">-</b><span>Ranked players</span></div>
+      </div>
+
+      <div class="board-head">
+        <h3>Leaderboard</h3>
+        <label class="sr" for="fighter">Ranking</label>
+        <select id="fighter"><option value="">Overall</option></select>
+      </div>
+      <p class="empty" id="empty">No ranked players yet. Play online to be the first.</p>
+      <div class="table-wrap" id="table-wrap" hidden>
+        <table class="board">
+          <thead><tr id="head"></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p class="board-foot"><a href="leaderboard/">Full leaderboard &rarr;</a><a href="account/">Sign in with Discord</a><span id="board-upd"></span></p>
     </div>
-    <ul class="grid">
-      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>Native, not emulated</h3><p>The game's AArch64 machine code is translated to C once and compiled for x64. No interpreter, no JIT at run time.</p></li>
-      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>One project</h3><p>WindowSmash and ssbu-recomp merged into OpenSmash-Ultimate: one runtime at game version 13.0.5, one repository, one Discord.</p></li>
-      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>One-click installer</h3><p>Finds your game, keys and firmware in yuzu / Ryujinx folders, installs Python and a compiler without Visual Studio, applies the 13.0.5 update and your DLC, resumes if it stops.</p></li>
-      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>Renderers</h3><p>Direct3D 11 by default, Metal on Macs. Shader prewarm and Prepare Shaders against first-use stutter; a cap on the memory the prewarm may take.</p></li>
-      <li class="card reveal" data-status="exp"><span class="badge exp">Experimental</span><h3>Vulkan</h3><p>Vulkan as a choice in display.ini and the settings menu: menus, fights, overlay and settings menu drawn, the fight result identical to Direct3D 11.</p></li>
-      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>In-game settings menu</h3><p><kbd>F1</kbd> over the running game: display, controls, controllers (dead zones, invert, ignore), GameCube adapters, language, master volume, mods. <kbd>F2</kbd> shows a stats overlay.</p></li>
-      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>Online rooms</h3><p>The game's own Local Wireless over the internet: rooms with a code, LAN rooms, a lobby, relay and direct paths. Rooms say exactly which version or mods differ.</p></li>
-      <li class="card reveal" data-status="exp"><span class="badge exp">Experimental</span><h3>Rollback netplay</h3><p>Rollback for fights (WindowSmash #103 and ssbu-recomp #116 brought together): tested with simulated lag, loss and jitter with no desync.</p></li>
-      <li class="card reveal" data-status="done"><span class="badge done">Done</span><h3>Mods and Skyline plugins</h3><p>The OpenSmash launcher and mod manager, ARCropolis mods and Skyline plugins, a switch for every mod in game and in the launcher, and native mods written against hook.h.</p></li>
-      <li class="card reveal" data-status="exp"><span class="badge exp">Experimental</span><h3>New fighters</h3><p>Fighters with a kind, a script module and files of their own, up to 16, all eight colours: Waluigi and Phantom Ganon play.</p></li>
-      <li class="card reveal" data-status="exp"><span class="badge exp">Experimental</span><h3>Fighters as C++ source</h3><p>A fighter's scripts as C++ in a DLL that replaces the game's, tested to give the same fight as the game.</p></li>
-      <li class="card reveal" data-status="wip"><span class="badge wip">In progress</span><h3>Lower input delay</h3><p>A low-latency display mode is in; run-ahead and removing the game's own input delay are next.</p></li>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#install"><span>Download</span></a>
+      <a class="btn btn-ghost" data-link="discord" href="https://discord.gg/pkgyYGf3YB" rel="noopener"><span>Join the Discord</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== HOW ONLINE WORKS ========== -->
+<section aria-labelledby="how-title">
+  <div class="wrap">
+    <h2 id="how-title">How online works</h2>
+    <ul class="facts">
+      <li><b>One server</b> in Europe; relays through Epic Online Services as the fallback for every region.</li>
+      <li><b>Rollback netplay</b> for fights, no port forwarding.</li>
+      <li><b>GSP ranked</b> on the game's own online modes, per fighter and overall.</li>
+      <li><b>Discord</b> sign-in, Rich Presence with Join, and an optional name on the leaderboard.</li>
     </ul>
-    <p class="legend reveal"><span class="badge done">Done</span> works and was tested on the development PC &nbsp; <span class="badge exp">Experimental</span> works, off by default or not widely tested &nbsp; <span class="badge wip">In progress</span> being built</p>
   </div>
 </section>
 
 <!-- ========== INSTALL ========== -->
-<section id="install" class="section install" aria-labelledby="install-title">
-  <div class="slash-bg" aria-hidden="true"></div>
+<section id="install" aria-labelledby="install-title">
   <div class="wrap">
-    <p class="eyebrow reveal">04 / Install</p>
-    <h2 id="install-title" class="big reveal">THREE<br><span class="outline">STEPS.</span></h2>
-    <ol class="steps">
-      <li class="step reveal"><span class="step-n">01</span><h3>Download</h3><p>Download <b>OpenSmash Setup.exe</b> from the latest release (<a href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/releases/tag/v0.3.0-alpha.3" rel="noopener">v0.3.0-alpha.3</a>) and run it (if Windows warns about a downloaded file: <em>More info</em>, <em>Run anyway</em>). Pick a folder with room (not the Desktop or Documents: about 60 GB) and click <em>Download and set up</em>: it downloads OpenSmash, makes the desktop shortcuts and opens the launcher.</p><a class="link" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/releases/download/v0.3.0-alpha.3/OpenSmash-Setup.exe" rel="noopener">Download OpenSmash Setup.exe &rarr;</a></li>
-      <li class="step reveal"><span class="step-n">02</span><h3>Install</h3><p>In the installer window, check that it found your game, its 13.0.5 update, your keys and firmware (it looks in your yuzu / Ryujinx folders; otherwise pick them with <em>Browse</em>), then press <em>Set up and build</em>: 30 minutes to a few hours; if it stops, run it again and it resumes.</p></li>
-      <li class="step reveal"><span class="step-n">03</span><h3>Play</h3><p>Press <em>Play</em> in the launcher or use the <b>Play SSBU</b> desktop shortcut. Updates: launcher <em>Settings &rarr; Update</em>.</p></li>
+    <h2 id="install-title">Install</h2>
+    <ol class="three">
+      <li><h3>Download</h3><p>Get <b>OpenSmash-Setup.exe</b> from the <a href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/releases/download/v0.3.0-alpha.3/OpenSmash-Setup.exe" rel="noopener">latest release</a> and run it. Pick a folder with about 60 GB free.</p></li>
+      <li><h3>Set up</h3><p>Point it at your own copy of the game (13.0.5), keys and firmware, then press <em>Set up and build</em>.</p></li>
+      <li><h3>Play</h3><p>Press <em>Play</em> in the launcher. Online is in <em>Settings &rarr; Online</em>.</p></li>
     </ol>
-    <div class="install-foot reveal">
-      <div class="req">
-        <h3>You need</h3>
-        <ul>
-          <li>Windows 10 or 11, 64-bit</li>
-          <li>A GPU with Direct3D 11 (Vulkan is optional)</li>
-          <li>About 60 GB of free disk</li>
-          <li>A CPU with AVX2 (SSE4.2 works too, slower)</li>
-          <li>Your own copy of the game at version 13.0.5, with your keys and firmware, dumped from a console you own</li>
-        </ul>
-      </div>
-      <div class="install-links">
-        <a class="btn btn-primary" data-link="guide" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/INSTALL.md" rel="noopener"><span>Install guide</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h12M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5"/></svg></a>
-        <a class="btn btn-ghost" data-link="video" href="#install"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg><span data-label>Video tutorial</span></a>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ========== PLAY WITH A FRIEND ========== -->
-<section id="friend" class="section install" aria-labelledby="friend-title">
-  <div class="wrap">
-    <p class="eyebrow reveal">Try it with a friend <span class="badge exp">Experimental</span></p>
-    <h2 id="friend-title" class="big reveal">PLAY WITH<br><span class="outline">A FRIEND.</span></h2>
-    <ol class="steps">
-      <li class="step reveal"><span class="step-n">01</span><h3>Both install</h3><p>Each of you follows the three steps above on your own PC, with your own copy of the game at version 13.0.5. Use the <b>same version</b> of the project and the same DLC, and check that the game works offline first.</p></li>
-      <li class="step reveal"><span class="step-n">02</span><h3>Start the game</h3><p>Start it from the launcher or the <b>Play SSBU</b> shortcut: online through the public lobby is the default, with no router setup, and matches use rollback netcode. If Windows asks about the network for <code>ssbu.exe</code>, allow it.</p></li>
-      <li class="step reveal"><span class="step-n">03</span><h3>Create &amp; join</h3><p>One of you: main menu &rarr; <b>Local Wireless</b> &rarr; <b>Create a Room</b>. The other: <b>Local Wireless</b> &rarr; <b>Rooms List</b> &rarr; pick the room. Press <kbd>F1</kbd> to see the connection and the ping.</p></li>
-    </ol>
-    <div class="install-foot reveal">
-      <div class="req">
-        <h3>If the room does not show up</h3>
-        <ul>
-          <li>Check that both of you run the same project version with the game at 13.0.5.</li>
-          <li>Friends only: agree on a lobby code, or use a private room with a room code (<code>XXXXX-XXXXX</code>).</li>
-          <li>A group with one host: <code>launchers\Host SSBU Netplay.bat</code> and <code>launchers\Join SSBU Netplay.bat</code>.</li>
-          <li>Send the end of <code>build\play.log</code> on Discord.</li>
-        </ul>
-      </div>
-      <div class="install-links">
-        <a class="btn btn-primary" data-link="discord" href="#friend" rel="noopener"><span>Ask on Discord</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h12M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5"/></svg></a>
-        <a class="btn btn-ghost" data-link="online" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/MULTIPLAYER.md" rel="noopener"><span>Online guide</span></a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== ONLINE + STATUS ========== -->
-<section id="online" class="section online" aria-labelledby="online-title">
-  <div class="wrap online-grid">
-    <div>
-      <p class="eyebrow reveal">05 / Online <span class="badge exp">Experimental</span></p>
-      <h2 id="online-title" class="big reveal">PLAY<br><span class="outline">ONLINE.</span></h2>
-      <p class="lead reveal">The game's own Local Wireless mode, carried over a network. Create a room, the other player finds it in the Rooms List and joins. No extra program.</p>
-      <ul class="modes">
-        <li class="reveal"><b>LAN</b><span>Same network, no server: rooms are found automatically.</span></li>
-        <li class="reveal"><b>Room code</b><span>Host and join over the internet with a code, no server.</span></li>
-        <li class="reveal"><b>Lobby</b><span>A small open-source lobby server; players need no port forwarding.</span></li>
-      </ul>
-      <p class="note reveal">Off by default: switch it on in the game with <kbd>F1</kbd> &rarr; Experimental &rarr; Online play. Our public lobby is in Milan. Tested with two game instances on one PC; your matches between two PCs over the internet are the first real tests. No encryption yet: play with people you know. Delay-based for now; rollback is in development.</p>
-      <a class="link reveal" data-link="online" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/MULTIPLAYER.md" rel="noopener">How to turn it on &rarr;</a>
-    </div>
-
-    <div class="status reveal" id="status" data-state="idle" aria-labelledby="status-title">
-      <div class="status-head">
-        <h3 id="status-title">Lobby status</h3>
-        <span class="status-pill" role="status" aria-live="polite"><i></i><span class="status-text">Checking&hellip;</span></span>
-      </div>
-      <dl class="status-grid">
-        <div><dt>Players online</dt><dd data-k="players">&ndash;</dd></div>
-        <div><dt>Rooms</dt><dd data-k="rooms">&ndash;</dd></div>
-        <div><dt>Lobby</dt><dd data-k="lobby">&ndash;</dd></div>
-        <div><dt>Uptime</dt><dd data-k="uptime">&ndash;</dd></div>
-      </dl>
-      <div class="status-foot">
-        <span>Version <b data-k="version">&ndash;</b></span>
-        <span>Last update <b data-k="updated">&ndash;</b></span>
-      </div>
-      <p class="status-msg" data-k="msg"></p>
-      <div class="status-scan" aria-hidden="true"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== ROADMAP ========== -->
-<section id="roadmap" class="section roadmap" aria-labelledby="road-title">
-  <div class="wrap">
-    <p class="eyebrow reveal">06 / Roadmap</p>
-    <h2 id="road-title" class="big reveal">WHAT'S<br><span class="outline">NEXT.</span></h2>
-    <ol class="road">
-      <li class="road-item reveal"><span class="road-n">01</span><div><h3>Performance first</h3><p>A steady frame rate on every PC, and the monitor's own refresh rate respected so 60, 120 and 144 Hz screens all show the game at its best.</p></div><span class="badge wip">In progress</span></li>
-      <li class="road-item reveal"><span class="road-n">02</span><div><h3>Rollback, offline-like</h3><p>Rollback that holds up across oceans, and the game's own input delay removed.</p></div><span class="badge wip">In progress</span></li>
-      <li class="road-item reveal"><span class="road-n">03</span><div><h3>Online in the game's Online menu</h3><p>Matchmaking and arenas inside the game's own Online screen, and more than 10 rooms in Local Wireless.</p></div><span class="badge wip">In progress</span></li>
-      <li class="road-item reveal"><span class="road-n">04</span><div><h3>More fighters on the select screen</h3><p>The select screen growing rows by itself for new fighters.</p></div><span class="badge wip">In progress</span></li>
-      <li class="road-item reveal"><span class="road-n">05</span><div><h3>Vulkan as fast as Direct3D 11</h3><p>The Vulkan renderer at full speed in fights, then the default where it helps.</p></div><span class="badge wip">In progress</span></li>
-      <li class="road-item reveal"><span class="road-n">06</span><div><h3>Mods as single files</h3><p>Drop one file in the characters folder and the fighter is in the game.</p></div><span class="badge wip">In progress</span></li>
-    </ol>
-  </div>
-</section>
-
-<!-- ========== TOOLS ========== -->
-<section id="tools" class="section tools" aria-labelledby="tools-title">
-  <div class="wrap">
-    <p class="eyebrow reveal">07 / Tools</p>
-    <h2 id="tools-title" class="big reveal">BUILT<br><span class="outline">TO MOD.</span></h2>
-    <ul class="tool-grid">
-      <li class="tool reveal"><h3>Lobby server</h3><p>Run your own online lobby: one Python file, standard library only, with a status endpoint.</p><a class="link" data-tool="lobby" href="#tools">Soon</a></li>
-      <li class="tool reveal"><h3>Fighter SDK</h3><p>Decompile fighter scripts to C++, edit, rebuild a fighter in about a second; hook any game function from a mod DLL.</p><a class="link" data-tool="sdk" href="#tools">Soon</a></li>
-      <li class="tool reveal"><h3>Single-file packager</h3><p>Pack a fighter mod into one file that you drop into the characters folder.</p><a class="link" data-tool="packager" href="#tools">Soon</a></li>
-      <li class="tool reveal"><h3>Mod manager</h3><p>Turn mods on and off and keep them in sync with your build.</p><a class="link" data-tool="modmanager" href="#tools">Soon</a></li>
-      <li class="tool reveal"><h3>Frame compare</h3><p>Compare two builds frame by frame from their per-frame state hash logs.</p><a class="link" data-tool="replay" href="#tools">Soon</a></li>
-    </ul>
-  </div>
-</section>
-
-<!-- ========== FAQ / COMMUNITY ========== -->
-<section id="faq" class="section faq" aria-labelledby="faq-title">
-  <div class="wrap faq-grid">
-    <div>
-      <p class="eyebrow reveal">08 / FAQ</p>
-      <h2 id="faq-title" class="big reveal">STRAIGHT<br><span class="outline">ANSWERS.</span></h2>
-    </div>
-    <div class="qa">
-      <details class="reveal"><summary>Is this an emulator?</summary><p>No. There is no CPU interpreter or JIT. The game's code is translated to C ahead of time and compiled for Windows; the console's services are re-implemented by the project's runtime.</p></details>
-      <details class="reveal"><summary>Does it include the game?</summary><p>No. The project contains no game code, no game assets, no keys and no firmware, and does not link to any. Everything derived from the game is generated on your PC from your own dump and never leaves it.</p></details>
-      <details class="reveal"><summary>Do I need to own the game?</summary><p>Yes. You need your own copy of the game (version 13.0.5) and a console you own to dump it, its keys and firmware. That is the one step the project cannot do for you.</p></details>
-      <details class="reveal"><summary>Why do I have to build it? Why no download?</summary><p>The build contains code derived from the game, which cannot be distributed. The installer generates it on your PC from your dump, in one click.</p></details>
-      <details class="reveal"><summary>Can I play online?</summary><p>Experimentally: Local Wireless over a LAN, with a room code or through a lobby server. It is off by default and delay-based; rollback netcode is in development.</p></details>
-      <details class="reveal"><summary>Linux or Steam Deck?</summary><p>Not yet. The runtime is Windows-only today; other platforms are on the roadmap.</p></details>
-      <details class="reveal"><summary>How do I use my own save file?</summary><p>With the game closed. The game keeps its saves in <code>build\saves\save\</code> (or <code>&lt;your install location&gt;\saves\save\</code> if you chose one in the installer), as a <code>save_data</code> folder holding <code>system_data.bin</code>, <code>mii</code>, <code>spirits</code> and <code>stage</code>. Get your save as a folder that contains <code>save_data</code>: from your Switch with JKSV or Checkpoint, from yuzu / Eden / suyu (right-click the game, <em>Open Save Data Location</em>) or from Ryujinx (right-click the game, <em>Open User Save Directory</em>). Rename <code>build\saves\save</code> to <code>save_old</code> as a backup, create a new empty <code>build\saves\save</code> and copy your <code>save_data</code> folder into it (you should have <code>build\saves\save\save_data\system_data.bin</code>), then start the game. Folders named <code>save.work.&lt;number&gt;</code> are temporary session files: leave them or delete them while the game is closed.</p></details>
-      <details class="reveal"><summary>What is the licence?</summary><p>GPL-3.0 (version 3 or later), every file. You can read, change and share the code under the same terms.</p></details>
-      <details class="reveal"><summary>Was this built with AI?</summary><p>Yes, openly: almost all code was written by AI coding agents directed by the maintainer. Every claim is backed by a test or a measurement.</p></details>
-    </div>
-  </div>
-  <div class="wrap community" id="community">
-    <div class="comm reveal">
-      <h3>Join the community</h3>
-      <p>Testers with other GPUs and controllers, and people who know the game's internals or the modding tools, are very welcome.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary" data-link="discord" href="#community"><span data-label>Discord</span></a>
-        <a class="btn btn-ghost" data-link="issues" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/issues" rel="noopener"><span>Report a bug</span></a>
-        <a class="btn btn-ghost" data-link="contributing" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/CONTRIBUTING.md" rel="noopener"><span>Contribute</span></a>
-      </div>
-    </div>
+    <p class="small">Windows 10/11 64-bit, a Vulkan or Direct3D 11 GPU (Vulkan is the default), your own game dumped from your own Switch. Linux and macOS are experimental. <a data-link="guide" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/INSTALL.md" rel="noopener">Install guide</a> &middot; <a href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/releases" rel="noopener">All releases</a></p>
   </div>
 </section>
 
 </main>
 
 <footer class="footer">
-  <div class="footer-cut" aria-hidden="true"></div>
-  <div class="wrap footer-grid">
-    <div class="footer-brand">
-      <img class="brand-mark big-mark" src="assets/emblem-white.svg" alt="" aria-hidden="true">
-      <p class="footer-name">OPENSMASH-ULTIMATE</p>
-      <p class="small">Recompiled, not emulated. Free software under the <a data-link="license" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/LICENSE" rel="noopener">GNU GPL v3.0 or later</a>.</p>
-    </div>
-    <nav class="footer-links" aria-label="Footer">
+  <div class="wrap">
+    <nav class="flinks" aria-label="Links">
       <a data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener">GitHub</a>
-      <a data-link="guide" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/BUILDING.md" rel="noopener">Install guide</a>
-      <a data-link="online" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/MULTIPLAYER.md" rel="noopener">Online guide</a>
-      <a data-link="releases" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/releases" rel="noopener">Releases</a>
-      <a data-link="issues" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/issues" rel="noopener">Issues</a>
-      <a data-link="discord" href="#community"><span data-label>Discord</span></a>
+      <a data-link="discord" href="https://discord.gg/pkgyYGf3YB" rel="noopener">Discord</a>
+      <a href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/INSTALL.md" rel="noopener">Install</a>
+      <a href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/blob/main/docs/MULTIPLAYER.md" rel="noopener">Online guide</a>
+      <a href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate/issues" rel="noopener">Report a bug</a>
       <a href="privacy/">Privacy</a>
       <a href="terms/">Terms</a>
     </nav>
-    <p class="legal">OpenSmash-Ultimate is not affiliated with, endorsed or sponsored by Nintendo, Bandai Namco or Sora Ltd. <em>Super Smash Bros.</em> and <em>Nintendo Switch</em> are trademarks of their owners and are named only to say what the software works with. This project contains no copyrighted game data, no console keys and no firmware, and does not help anyone obtain them. You must own the game and dump it yourself. The screenshots show the game running in OpenSmash-Ultimate; every other picture on this site is original.</p>
+    <p class="legal">Free software under the GNU GPL v3.0 or later. OpenSmash-Ultimate is not affiliated with, endorsed or sponsored by Nintendo, Bandai Namco or Sora Ltd. <em>Super Smash Bros.</em> and <em>Nintendo Switch</em> are trademarks of their owners. This project contains no game data, console keys or firmware: you must own the game and dump it yourself.</p>
   </div>
 </footer>
 </body>
