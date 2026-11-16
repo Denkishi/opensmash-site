@@ -70,13 +70,13 @@ document.addEventListener("DOMContentLoaded", function () {
   function getToken() {
     var t = load(K_TOKEN), exp = Number(load(K_EXP) || 0);
     if (t && exp > Date.now() + 5000) return t;
-    drop(K_TOKEN, K_EXP);
+    drop(K_TOKEN, K_EXP, "osu_nav_user");
     return null;
   }
 
   function fetchMe(token) {
     return fetch(ME, { headers: { Authorization: "Bearer " + token } }).then(function (r) {
-      if (r.status === 401) { drop(K_TOKEN, K_EXP); throw new Error("expired"); }
+      if (r.status === 401) { drop(K_TOKEN, K_EXP, "osu_nav_user"); throw new Error("expired"); }
       if (!r.ok) throw new Error("Discord answered HTTP " + r.status + ".");
       return r.json();
     });
