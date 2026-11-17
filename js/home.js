@@ -37,6 +37,25 @@
 
   function cell(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; e.textContent = text; return e; }
 
+  /* The Discord profile picture the lobby lists (same check as the full leaderboard page), else the initial. */
+  var AVATAR_RE = /^https:\/\/cdn\.discordapp\.com\/(avatars\/[0-9]+\/(a_)?[0-9a-f]{32}\.png\?size=64|embed\/avatars\/[0-5]\.png)$/;
+  function initial(name) { return cell("span", "initial", (name || "A").charAt(0).toUpperCase()); }
+  function avatar(p) {
+    if (!p || typeof p.avatar !== "string" || !AVATAR_RE.test(p.avatar)) return initial(p && p.name);
+    var img = document.createElement("img");
+    img.className = "avatar"; img.alt = ""; img.width = img.height = 28;
+    img.loading = "lazy"; img.decoding = "async"; img.referrerPolicy = "no-referrer";
+    img.addEventListener("error", function () { if (img.parentNode) img.parentNode.replaceChild(initial(p.name), img); });
+    img.src = p.avatar;
+    return img;
+  }
+  /* A per-fighter top entry carries only the player's id: name and picture come from the overall list. */
+  function byId(id) {
+    var ps = (board && board.players) || [];
+    for (var i = 0; i < ps.length; i++) if (ps[i].id === id) return ps[i];
+    return null;
+  }
+
   function fighterName(kind) {
     var f = board && board.fighters && board.fighters[kind];
     return (f && f.name) || "Fighter " + kind;
@@ -50,16 +69,20 @@
     $("empty").hidden = true; $("table-wrap").hidden = false;
     if (kind) {
       ["#", "Player", "GSP"].forEach(function (c, i) { head.appendChild(cell("th", i === 2 ? "num" : "", c)); });
-      rows = ((board.fighters[kind] || {}).top || []).slice(0, TOP).map(function (p) { return [p.rank, p.name, null, p.gsp]; });
+      rows = ((board.fighters[kind] || {}).top || []).slice(0, TOP).map(function (p) { var q = byId(p.id) || p; return [p.rank, q.name, null, p.gsp, q]; });
     } else {
       ["#", "Player", "GSP"].forEach(function (c, i) { head.appendChild(cell("th", i === 2 ? "num" : "", c)); });
-      rows = board.players.slice(0, TOP).map(function (p) { return [p.rank, p.name, p.fighter != null ? fighterName(p.fighter) : "-", p.gsp]; });
+      rows = board.players.slice(0, TOP).map(function (p) { return [p.rank, p.name, p.fighter != null ? fighterName(p.fighter) : "-", p.gsp, p]; });
     }
     rows.forEach(function (r) {
       var tr = document.createElement("tr");
       tr.appendChild(cell("td", "pos", "#" + r[0]));
-      var pc = cell("td", "", r[1] || "Anonymous");
-      if (r[2] !== null) pc.appendChild(cell("small", "fn", r[2]));
+      var pc = cell("td", ""), box = cell("div", "player", "");
+      box.appendChild(avatar(r[4]));
+      var who = cell("span", "", r[1] || "Anonymous");
+      if (r[2] !== null) who.appendChild(cell("small", "fn", r[2]));
+      box.appendChild(who);
+      pc.appendChild(box);
       tr.appendChild(pc);
       tr.appendChild(cell("td", "num", String(r[3])));
       body.appendChild(tr);
