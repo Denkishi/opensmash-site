@@ -12,6 +12,7 @@ GPL-3.0 like the project. Not affiliated with Nintendo.
 | `index.html`, `css/home.css`, `js/hero.js`, `js/home.js`, `js/snapshot.js`, `js/session.js`, `js/nav-login.js` | the home page: hero, live counts, top 10 (overall or per fighter), install, the Register / Log in button |
 | `css/style.css` | the shared design |
 | `config.js` | links: repository, Discord |
+| `js/opensmash-auth.js`, `js/opensmash-account-ui.js`, `auth/callback/` | "Sign in with your OpenSmash account" (see below) |
 | `leaderboard/`, `account/`, `css/pages.css`, `js/leaderboard.js`, `js/account.js`, `js/page.js` | full leaderboard; Discord sign-in and your own GSP |
 | `leaderboard.json`, `status.json` | old snapshots, only the fallback; the live ones are on the `data` branch |
 | `.github/workflows/leaderboard.yml`, `.github/scripts/leaderboard.py` | the snapshot job |
@@ -60,6 +61,23 @@ The access token is refreshed with the refresh token (Discord accepts the `refre
 with only `client_id`; it rotates the refresh token each time). `prompt=none` on the authorize request skips the consent
 screen for people who already authorised the app. Log out revokes the tokens and clears the session. If storage is blocked
 it falls back to `sessionStorage`, then to memory.
+
+## OpenSmash account sign-in
+
+The shared OpenSmash / SSBU Arena account (the one the launcher and ssbuarena.com use). This site is a public OAuth
+client of the accounts service (Supabase Auth OAuth 2.1 server): authorization code + PKCE (S256), no secret, no
+`supabase-js`, no server. "Sign in" goes to `https://account.opensmashultimate.com`, comes back to `auth/callback/`
+with a one-time code, and `js/opensmash-auth.js` (`window.OpenSmashAuth`) exchanges it for this site's own session.
+`js/opensmash-account-ui.js` wires the panel on `account/` (ids `osa-*`); `js/nav-login.js` shows `Name#0042` in the
+top bar. The Discord sign-in above stays: leaderboard rows are matched by Discord id.
+
+- The sign-in talks only to `gnufjvqwynxmudpgrded.supabase.co` and `account.opensmashultimate.com`. The session (access
+  and refresh token, player id, name, tag, rating) is kept in this browser's `localStorage` under `osu_account` until
+  Sign out. A sign-in in progress lives in `sessionStorage` (`osu_account_pending`) and is deleted when the callback runs.
+- The client id, redirect URI (`https://denkishi.github.io/opensmash-site/auth/callback/`, trailing slash included) and
+  publishable key are public and are constants at the top of `js/opensmash-auth.js`. If the site moves, the registered
+  redirect URI and `SITE_URL` there change together (ask the OpenSmash / SSBU Arena team). There is no client secret.
+- Test (no network, fake `fetch` and storage): `node .github/opensmash-auth.test.cjs`.
 
 ## GitHub Pages
 

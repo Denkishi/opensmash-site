@@ -38,6 +38,8 @@ jobs:
           python-version: "3.12"
       - name: Self-test (offline)
         run: python .github/scripts/leaderboard.py --selftest
+      - name: Sign-in self-test (offline)
+        run: node .github/opensmash-auth.test.cjs
       - name: Snapshot loop (5 h 50 m)
         env:
           DATA_DIR: ${{ github.workspace }}/data

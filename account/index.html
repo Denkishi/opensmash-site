@@ -18,9 +18,11 @@
 <script src="../js/page.js?v=3" defer></script>
 <script src="../js/session.js?v=3" defer></script>
 <script src="../js/account.js?v=3" defer></script>
-<script src="../js/nav-login.js?v=3" defer></script>
+<script src="../js/opensmash-auth.js?v=1" defer></script>
+<script src="../js/nav-login.js?v=4" defer></script>
+<script src="../js/opensmash-account-ui.js?v=1" defer></script>
 </head>
-<body>
+<body data-osa-next="account/">
 <a class="skip" href="#main">Skip to content</a>
 <header class="nav">
   <a class="brand" href="../" aria-label="OpenSmash-Ultimate, home">
@@ -39,6 +41,24 @@
 <main id="main" class="page">
   <div class="wrap">
     <h1>Your <span>account</span></h1>
+
+    <div class="panel">
+      <h2>OpenSmash account</h2>
+      <p class="muted">One account for OpenSmash and SSBU Arena. You sign in on account.opensmashultimate.com; this site never sees your password.</p>
+      <div id="osa-error" class="notice err hidden" role="alert"></div>
+      <div id="osa-signed-out">
+        <p><button id="osa-signin" class="btn btn-solid" type="button"><span>Sign in</span></button>
+        <a id="osa-signup" class="btn btn-outline" href="https://account.opensmashultimate.com/signup"><span>Create account</span></a></p>
+      </div>
+      <div id="osa-signed-in" class="hidden" aria-live="polite">
+        <p>Signed in as <b id="osa-name"></b></p>
+        <p><a id="osa-manage" class="btn btn-outline" href="https://account.opensmashultimate.com/account" rel="noopener"><span>Manage account</span></a>
+        <button id="osa-signout" class="btn btn-outline" type="button"><span>Sign out</span></button></p>
+        <p class="muted small">Sign out only forgets you in this browser. You stay signed in on account.opensmashultimate.com; use Manage account to sign out everywhere.</p>
+      </div>
+    </div>
+
+    <h2>Link Discord to see your rank and GSP</h2>
     <p class="lede">Sign in with Discord to see your rank and your GSP on every fighter. Only your Discord name and avatar are read (the <code>identify</code> scope); your Discord ID is hashed in your browser to find your row, nothing is stored on our side, and the sign-in lives in this tab only.</p>
 
     <div id="status" class="notice" role="status" aria-live="polite">Loading&hellip;</div>

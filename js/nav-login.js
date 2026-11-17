@@ -5,6 +5,7 @@
   "use strict";
   var a = document.getElementById("nav-login");
   if (!a || !window.OSUSession) return;
+  var OA = window.OpenSmashAuth;
   var loggedOutText = a.textContent, loggedOutTitle = a.title;
 
   function reset() { a.textContent = loggedOutText; a.title = loggedOutTitle; a.classList.remove("signed-in"); }
@@ -22,6 +23,11 @@
     a.classList.add("signed-in");
   }
   function paint() {
+    if (OA && OA.signedIn()) { // the OpenSmash account comes first, then the Discord name
+      a.textContent = OA.displayName(OA.profile()) || "Signed in";
+      a.title = "Your account"; a.classList.add("signed-in");
+      return;
+    }
     var s = OSUSession.get();
     if (!s) { reset(); return; }
     show(s.user || { username: "Signed in" });
@@ -34,6 +40,8 @@
     var job = !s0.user ? OSUSession.fetchUser() : (!s0.access || s0.exp <= Date.now() + 60000) ? OSUSession.token() : null;
     if (job) job.then(paint, function () { /* offline or Discord down: keep the cached name */ });
   }
-  window.addEventListener("storage", function (e) { if (e.key === OSUSession.KEY || e.key === null) paint(); }); // other tab
+  if (OA && OA.signedIn() && !OA.profile() && !/\/account\/?$/.test(location.pathname)) OA.fetchProfile().then(paint, function () { /* keep "Signed in" */ });
+  window.addEventListener("storage", function (e) { if (e.key === OSUSession.KEY || (OA && e.key === OA.KEY) || e.key === null) paint(); }); // other tab
   window.addEventListener("osu-session", paint); // this tab (account page)
+  window.addEventListener("osu-account", paint);
 })();

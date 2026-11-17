@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Signing in: OpenSmash-Ultimate</title>
+<meta name="theme-color" content="#050505">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../css/style.css?v=2">
+<link rel="stylesheet" href="../../css/pages.css">
+<script src="../../js/opensmash-auth.js?v=1"></script>
+</head>
+<body>
+<main id="main" class="page">
+  <div class="wrap">
+    <h1>Signing <span>in</span></h1>
+    <div id="msg" class="notice" role="status" aria-live="polite">Signing in&hellip;</div>
+    <p id="links" class="hidden">
+      <a class="btn btn-solid" href="../../account/?signin=1"><span>Try again</span></a>
+      <a class="btn btn-outline" href="../../"><span>Back to the site</span></a>
+    </p>
+  </div>
+</main>
+<script>
+(function () {
+  "use strict";
+  // The one-time code leaves the address bar before anything else happens.
+  var search = location.search;
+  try { history.replaceState(null, "", location.pathname); } catch (e) { /* ignore */ }
+  var msg = document.getElementById("msg"), links = document.getElementById("links");
+  function show(text) {
+    msg.textContent = text; msg.className = "notice err";
+    links.classList.remove("hidden");
+  }
+  var text = {
+    "cancelled": "Sign-in was cancelled.",
+    "not-yours": "This sign-in link is not valid any more. Please sign in again.",
+    "failed": "The sign-in did not work. Please try again."
+  };
+  if (!window.OpenSmashAuth) { show(text.failed); return; }
+  OpenSmashAuth.finishSignIn(search).then(function (r) {
+    if (!r.ok) { show(text[r.reason] || text.failed); return; }
+    var go = function () { location.replace("../../" + (r.next || "")); };
+    OpenSmashAuth.fetchProfile().then(go, go); // best effort: the name is then already there on the next page
+  }, function () { show(text.failed); });
+})();
+</script>
+</body>
+</html>
