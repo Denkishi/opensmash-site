@@ -47,3 +47,8 @@ table.board tbody tr:nth-child(-n+3) td.pos { color: var(--red); }
 .features .card { padding: 16px 16px 14px; }
 .features .card h3 { font-size: 22px; margin: 0 0 6px; }
 .features .card p { font-size: 14px; line-height: 1.45; }
+
+/* Leaderboard rows: Discord picture (or the initial) beside the name, as on the full leaderboard page. */
+.lb .player { display: flex; align-items: center; gap: 10px; }
+.lb .avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--bg-3); flex: none; }
+.lb .initial { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-3); color: var(--fg-dim); display: grid; place-items: center; font-weight: 800; font-size: 13px; flex: none; }
