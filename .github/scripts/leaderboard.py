@@ -21,6 +21,7 @@ LOBBIES = [
     "http://opensmash-lobby.duckdns.org:39421/leaderboard.json",
 ]
 STATUS_KEYS = ("online", "rooms", "arenas", "open_rooms", "playing")
+MATCH_MODES = ("quickplay", "arena", "room")
 _ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 # DATA_DIR: where the snapshots are written (the workflow checks the `data` branch out there). Default: repo root.
 _DATA = os.environ.get("DATA_DIR") or _ROOT
@@ -183,6 +184,14 @@ def build_status(docs, ranked, now_iso):
     for k in STATUS_KEYS:
         out[k] = sum(n for n in (_int(d.get(k)) for d in docs if isinstance(d, dict)) if n is not None)
     out["ranked"] = ranked
+    # (online matches played, from lobbies that count them: tools/nex/matches.py; left out until one does)
+    played = [d["matches"] for d in docs if isinstance(d, dict) and isinstance(d.get("matches"), dict)
+              and _int(d["matches"].get("total")) is not None]
+    if played:
+        out["matches"] = {"total": sum(_int(m.get("total")) for m in played),
+                          "today": sum(_int(m.get("today")) or 0 for m in played),
+                          "by_mode": {k: sum(_int((m.get("by_mode") or {}).get(k)) or 0 for m in played if isinstance(m.get("by_mode"), dict))
+                                      for k in MATCH_MODES}}
     return out
 
 
@@ -293,6 +302,7 @@ def selftest():
         with open(spath) as f:
             got = json.load(f)
         assert got["up"] is True and got["online"] == 3 and got["rooms"] == 2 and got["ranked"] == 2 and "x" not in got, got
+        assert "matches" not in got, "no count from a lobby that has none"
         # a lobby that does not serve /status.json yet: file left alone
         assert run(["http://b/l.json"], os.path.join(d, "l3.json"), fetcher, spath) == 0
         with open(spath) as f:
@@ -303,6 +313,10 @@ def selftest():
             assert json.load(f)["up"] is False
     global HEARTBEAT_S
     HEARTBEAT_S = 600
+    m = build_status([{"online": 1, "matches": {"total": 120, "today": 7, "by_mode": {"quickplay": 100, "arena": 15, "room": 5},
+                                                "estimated": 40, "since": "2026-11-18"}},
+                      {"online": 2, "matches": {"total": "x"}}, {"online": 0}], 0, "t")
+    assert m["matches"] == {"total": 120, "today": 7, "by_mode": {"quickplay": 100, "arena": 15, "room": 5}}, m
     assert same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:05:00Z"})
     assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:11:00Z"})
     assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 2, "updated": "2026-01-01T00:00:01Z"})

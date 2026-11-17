@@ -10,8 +10,20 @@
   var ago = OSUData.ago;
   function num(v) { return typeof v === "number" && isFinite(v) ? String(v) : "-"; }
 
+  /* "N online matches played" (status.json's matches; tools/nex/matches.py in the game's repo): hidden while the lobby
+     has no count, never a 0 standing in for a missing number. */
+  function showMatches(s) {
+    var m = s && s.up !== false && s.matches, total = m && m.total;
+    if (typeof total !== "number" || !isFinite(total) || total < 1) { $("matches").hidden = true; return; }
+    $("t-matches").textContent = Math.floor(total).toLocaleString("en-US");
+    var today = typeof m.today === "number" && m.today > 0 ? Math.floor(m.today) : 0;
+    $("t-matches-today").textContent = today ? " · " + today.toLocaleString("en-US") + " today" : "";
+    $("matches").hidden = false;
+  }
+
   function showStatus(s) {
     lastStatus = s;
+    showMatches(s);
     var pill = $("pill"), txt = $("pill-text"), upd = $("upd");
     var keys = ["online", "rooms", "arenas", "ranked"];
     function dashes() {

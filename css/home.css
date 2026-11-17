@@ -7,6 +7,9 @@
 .live-title { font-family: var(--display); font-weight: 400; font-size: clamp(40px, 6vw, 72px); line-height: .95; margin: 0 0 24px; text-transform: uppercase; }
 .live-row { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(20px, 4vw, 56px); align-items: start; }
 .status-grid dd { font-variant-numeric: tabular-nums; }
+.matches { margin: .75rem 0 0; font-size: .95rem; opacity: .9; }
+.matches[hidden] { display: none; }
+.matches b { font-variant-numeric: tabular-nums; }
 .pill { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim); }
 .pill i { width: 10px; height: 10px; border-radius: 50%; background: var(--fg-mute); display: inline-block; }
 .pill[data-s="up"] i { background: #3dff8a; box-shadow: 0 0 0 4px rgba(61,255,138,.2); }
