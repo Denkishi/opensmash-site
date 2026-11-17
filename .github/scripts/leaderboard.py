@@ -2,8 +2,8 @@
 """Build leaderboard.json from the OpenSmash lobby servers. Standard library only.
 
 Every public lobby serves GET http://<host>:39421/leaderboard.json (plain HTTP). This script fetches all of them,
-merges players by their opaque "id" (per fighter the highest GSP seen on any lobby; name/discord from any lobby that
-has them), recomputes the global positions and writes leaderboard.json at the repository root.
+merges players by their opaque "id" (per fighter the highest GSP seen on any lobby; name/discord/avatar from any lobby
+that has them; the avatar only as a Discord CDN URL), recomputes the global positions and writes leaderboard.json at the repository root.
 
 Lobbies: LOBBIES below, or the LOBBIES environment variable (comma-separated URLs).
 If no lobby answers, the script exits 0 and leaves the file alone. The file is only rewritten when the data changed
@@ -33,6 +33,8 @@ MAX_PLAYERS = 10000
 TOP_PER_FIGHTER = 100
 OUT_PATH = os.path.join(_DATA, "leaderboard.json")
 ID_RE = re.compile(r"^[0-9a-f]{16}$")
+# A Discord profile picture as the lobby gives it (tools/nex/board.py): uploaded, or Discord's default one.
+AVATAR_RE = re.compile(r"^https://cdn\.discordapp\.com/(avatars/[0-9]{1,32}/(a_)?[0-9a-f]{32}\.png\?size=64|embed/avatars/[0-5]\.png)$")
 
 FIGHTERS = {
     0: "Mario", 1: "Donkey Kong", 2: "Link", 3: "Samus", 4: "Dark Samus", 5: "Yoshi", 6: "Kirby", 7: "Fox",
@@ -88,7 +90,7 @@ def merge(lobbies):
             pid = str(p.get("id", "")).lower()
             if not ID_RE.match(pid):
                 continue
-            m = merged.setdefault(pid, {"gsp": {}, "name": None, "discord": None})
+            m = merged.setdefault(pid, {"gsp": {}, "name": None, "discord": None, "avatar": None})
             per = {}
             if isinstance(p.get("fighters"), dict):
                 for k, v in p["fighters"].items():
@@ -107,6 +109,9 @@ def merge(lobbies):
             d = p.get("discord")
             if isinstance(d, str) and ID_RE.match(d.lower()) and not m["discord"]:
                 m["discord"] = d.lower()
+            av = p.get("avatar")
+            if isinstance(av, str) and AVATAR_RE.match(av) and not m["avatar"]:
+                m["avatar"] = av
     return {k: v for k, v in merged.items() if v["gsp"]}
 
 
@@ -135,6 +140,8 @@ def build(merged, now_iso):
             row = {"rank": pos, "gsp": gsp, "id": pid}
             if by_id[pid]["name"]:
                 row["name"] = by_id[pid]["name"]
+            if by_id[pid]["avatar"]:
+                row["avatar"] = by_id[pid]["avatar"]
             top.append(row)
         tables[str(kind)] = {"name": FIGHTERS.get(kind, "Fighter %d" % kind), "top": top}
 
@@ -146,6 +153,8 @@ def build(merged, now_iso):
             p["name"] = m["name"]
         if m["discord"]:
             p["discord"] = m["discord"]
+        if m["avatar"]:
+            p["avatar"] = m["avatar"]
         players.append(p)
     return {"updated": now_iso, "ranked": len(players), "players": players, "fighters": tables}
 
@@ -237,12 +246,12 @@ def selftest():
     import tempfile
     a = {"updated": "x", "ranked": 2, "players": [
         {"id": "3f9a0c1d2e4b5a69", "rank": 1, "gsp": 2000, "fighter": 43, "fighters": {"43": {"gsp": 2000, "rank": 1}},
-         "name": "Nelly", "discord": "ab12cd34ef56ab78"},
+         "name": "Nelly", "discord": "ab12cd34ef56ab78", "avatar": "https://cdn.discordapp.com/embed/avatars/3.png"},
         {"id": "77aa000000000001", "rank": 2, "gsp": 1500, "fighter": 43,
          "fighters": {"0": {"gsp": 900, "rank": 1}, "43": {"gsp": 1500, "rank": 2}}}]}
     b = {"players": [
         {"id": "77aa000000000001", "gsp": 1700, "fighter": 0, "fighters": {"0": {"gsp": 1700, "rank": 1}},
-         "name": "<b>Bob</b>", "discord": "1111222233334444"},
+         "name": "<b>Bob</b>", "discord": "1111222233334444", "avatar": "javascript:alert(1)"},
         {"id": "3f9a0c1d2e4b5a69", "gsp": 1800, "fighter": 43, "fighters": {"43": {"gsp": 1800, "rank": 2}}},
         {"id": "zz", "gsp": 5, "fighter": 1}]}
     docs = {"http://a/l.json": a, "http://b/l.json": b}
@@ -255,7 +264,11 @@ def selftest():
     assert n["rank"] == 1 and n["gsp"] == 2000 and n["name"] == "Nelly" and n["discord"] == "ab12cd34ef56ab78"
     assert bob["rank"] == 2 and bob["gsp"] == 1700 and bob["fighter"] == 0 and bob["name"] == "<b>Bob</b>"
     assert bob["fighters"] == {"0": {"gsp": 1700, "rank": 1}, "43": {"gsp": 1500, "rank": 2}}, bob
-    assert out["fighters"]["43"]["top"][0] == {"rank": 1, "gsp": 2000, "id": n["id"], "name": "Nelly"}
+    assert n["avatar"] == "https://cdn.discordapp.com/embed/avatars/3.png" and "avatar" not in bob, "only Discord CDN avatars"
+    assert AVATAR_RE.match("https://cdn.discordapp.com/avatars/175928847299117063/a_" + "0" * 32 + ".png?size=64")
+    assert not AVATAR_RE.match("https://cdn.discordapp.com.evil.example/embed/avatars/1.png")
+    assert out["fighters"]["43"]["top"][0] == {"rank": 1, "gsp": 2000, "id": n["id"], "name": "Nelly",
+                                               "avatar": "https://cdn.discordapp.com/embed/avatars/3.png"}
     assert out["fighters"]["0"]["name"] == "Mario"
     with tempfile.TemporaryDirectory() as d:
         path = os.path.join(d, "lb.json")

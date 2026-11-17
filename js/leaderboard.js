@@ -5,9 +5,25 @@ document.addEventListener("DOMContentLoaded", function () {
   var status = $("status"), content = $("content"), select = $("fighter"), head = $("head"), rows = $("rows");
   var data = null;
 
+  /* The Discord profile picture the lobby lists (only for players who show their name), else the initial. */
+  var AVATAR_RE = /^https:\/\/cdn\.discordapp\.com\/(avatars\/[0-9]+\/(a_)?[0-9a-f]{32}\.png\?size=64|embed\/avatars\/[0-5]\.png)$/;
+  function initial(p) { return OSU.el("span", "initial", (p.name || "A").charAt(0).toUpperCase()); }
+  function avatar(p) {
+    if (typeof p.avatar !== "string" || !AVATAR_RE.test(p.avatar)) return initial(p);
+    var img = document.createElement("img");
+    img.className = "avatar";
+    img.alt = "";
+    img.width = img.height = 28;
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.referrerPolicy = "no-referrer";
+    img.addEventListener("error", function () { if (img.parentNode) img.parentNode.replaceChild(initial(p), img); });
+    img.src = p.avatar;
+    return img;
+  }
   function playerCell(p) {
     var td = OSU.el("td"), box = OSU.el("div", "player");
-    box.appendChild(OSU.el("span", "initial", (p.name || "A").charAt(0).toUpperCase()));
+    box.appendChild(avatar(p));
     box.appendChild(OSU.el("span", null, p.name || "Anonymous"));
     td.appendChild(box);
     return td;
