@@ -9,7 +9,8 @@
   var hero = document.querySelector(".hero"), canvas = document.querySelector(".hero-canvas");
   var inner = document.querySelector(".hero-inner"), slashes = document.querySelector(".hero-slashes");
   if (canvas && canvas.getContext) {
-    var ctx = canvas.getContext("2d"), W = 0, H = 0, dpr = 1, lines = [], sparks = [], running = false, visible = true;
+    var ctx = canvas.getContext("2d"), W = 0, H = 0, dpr = 1, lines = [], sparks = [], running = false, visible = true,
+        reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     var ang = -14 * Math.PI / 180, cos = Math.cos(ang), sin = Math.sin(ang), mx = 0, my = 0, tx = 0, ty = 0;
     function resize() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
