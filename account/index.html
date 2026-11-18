@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Account: OpenSmash-Ultimate</title>
-<meta name="description" content="Sign in with Discord to see your OpenSmash-Ultimate rank and GSP.">
+<meta name="description" content="Sign in with your OpenSmash account, shared with SSBU Arena.">
 <meta name="theme-color" content="#050505">
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="noindex">
@@ -16,10 +16,8 @@
 <script src="../config.js"></script>
 <script src="../js/snapshot.js?v=4" defer></script>
 <script src="../js/page.js?v=3" defer></script>
-<script src="../js/session.js?v=3" defer></script>
-<script src="../js/account.js?v=3" defer></script>
 <script src="../js/opensmash-auth.js?v=1" defer></script>
-<script src="../js/nav-login.js?v=4" defer></script>
+<script src="../js/nav-login.js?v=5" defer></script>
 <script src="../js/opensmash-account-ui.js?v=1" defer></script>
 </head>
 <body data-osa-next="account/">
@@ -58,42 +56,6 @@
       </div>
     </div>
 
-    <h2>Link Discord to see your rank and GSP</h2>
-    <p class="lede">Sign in with Discord to see your rank and your GSP on every fighter. Only your Discord name and avatar are read (the <code>identify</code> scope); your Discord ID is hashed in your browser to find your row, nothing is stored on our side, and the sign-in lives in this tab only.</p>
-
-    <div id="status" class="notice" role="status" aria-live="polite">Loading&hellip;</div>
-
-    <section id="signed-out" class="hidden">
-      <button id="signin" class="btn btn-solid" type="button"><span>Sign in with Discord</span></button>
-    </section>
-
-    <section id="signed-in" class="hidden" aria-live="polite">
-      <div class="panel">
-        <div class="who">
-          <img id="avatar" class="avatar lg" alt="" width="96" height="96">
-          <div>
-            <p class="who-name"><span id="name"></span><span id="rank" class="rank-pill hidden"></span></p>
-            <p id="handle" class="muted"></p>
-          </div>
-        </div>
-        <div id="overall" class="stats-row hidden">
-          <div class="stat"><b id="overall-gsp">0</b><span>Overall GSP</span></div>
-          <div class="stat"><b id="overall-best">-</b><span>Best fighter</span></div>
-        </div>
-        <p id="unranked" class="muted hidden">Not ranked yet. Turn on &ldquo;Show my name on the leaderboard&rdquo; in OpenSmash.exe or the web launcher&rsquo;s Discord card, then play online; your rank shows up here after the next leaderboard update.</p>
-      </div>
-      <div id="fighters-block" class="hidden">
-        <h2>GSP per fighter</h2>
-        <div class="table-wrap">
-          <table class="board">
-            <thead><tr><th>Fighter</th><th class="num">GSP</th><th class="num">Position</th></tr></thead>
-            <tbody id="fighters"></tbody>
-          </table>
-        </div>
-      </div>
-      <p class="muted" id="updated"></p>
-      <p><button id="signout" class="btn btn-outline" type="button"><span>Sign out</span></button></p>
-    </section>
   </div>
 </main>
 <footer class="footer">
