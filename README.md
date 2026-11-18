@@ -9,11 +9,11 @@ GPL-3.0 like the project. Not affiliated with Nintendo.
 
 | Path | What it is |
 |---|---|
-| `index.html`, `css/home.css`, `js/hero.js`, `js/home.js`, `js/snapshot.js`, `js/session.js`, `js/nav-login.js` | the home page: hero, live counts, top 10 (overall or per fighter), install, the Register / Log in button |
+| `index.html`, `css/home.css`, `js/hero.js`, `js/home.js`, `js/snapshot.js`, `js/nav-login.js` | the home page: hero, live counts, top 10 (overall or per fighter), install, the Register / Log in button |
 | `css/style.css` | the shared design |
 | `config.js` | links: repository, Discord |
 | `js/opensmash-auth.js`, `js/opensmash-account-ui.js`, `auth/callback/` | "Sign in with your OpenSmash account" (see below) |
-| `leaderboard/`, `account/`, `css/pages.css`, `js/leaderboard.js`, `js/account.js`, `js/page.js` | full leaderboard; Discord sign-in and your own GSP |
+| `leaderboard/`, `account/`, `css/pages.css`, `js/leaderboard.js`, `js/page.js` | full leaderboard; the account page (shared OpenSmash account) |
 | `leaderboard.json`, `status.json` | old snapshots, only the fallback; the live ones are on the `data` branch |
 | `.github/workflows/leaderboard.yml`, `.github/scripts/leaderboard.py` | the snapshot job |
 | `privacy/`, `terms/`, `404.html`, `robots.txt`, `.nojekyll` | legal pages and Pages extras |
@@ -47,20 +47,11 @@ by hand: Actions > Update leaderboard and status > Run workflow.
 - The lobby list is at the top of `leaderboard.py` (or the `LOBBIES` environment variable, comma-separated).
 - Offline test: `python .github/scripts/leaderboard.py --selftest`.
 
-## Discord sign-in
+## Sign-in
 
-`account/` is OAuth2 with PKCE in the browser (no server, no secret). It hashes your Discord id in the browser
-(`sha256("opensmash-discord
-" + id)`, first 16 hex characters) to find your row. The redirect
-`https://denkishi.github.io/opensmash-site/account/` must be listed in the Discord application's OAuth2 redirects
-(if the site moves, change `REDIRECT_URI` in `js/session.js` and that list together).
-
-The session is kept in `localStorage` (`osu_session`: access token and its expiry, refresh token, your id, name and
-avatar) by `js/session.js`, so you stay signed in between visits and the top-bar button shows your name on every page.
-The access token is refreshed with the refresh token (Discord accepts the `refresh_token` grant from a PKCE public client
-with only `client_id`; it rotates the refresh token each time). `prompt=none` on the authorize request skips the consent
-screen for people who already authorised the app. Log out revokes the tokens and clears the session. If storage is blocked
-it falls back to `sessionStorage`, then to memory.
+The only sign-in is the shared OpenSmash / SSBU Arena account (js/opensmash-auth.js, signed in on
+account.opensmashultimate.com). The site's own Discord sign-in was removed: players who signed in with it were not saved in
+the accounts database. Discord is linked from the account site.
 
 ## OpenSmash account sign-in
 
