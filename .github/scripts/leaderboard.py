@@ -18,6 +18,10 @@ import urllib.request
 from datetime import datetime, timezone
 
 LOBBIES = [
+    # v0.5.0: the official lobbies (relay only, signed-in players; run by SSBU Arena)
+    "http://eu.lobby.opensmashultimate.com:39421/leaderboard.json",
+    "http://na.lobby.opensmashultimate.com:39421/leaderboard.json",
+    # v0.4.x players, until they update
     "http://opensmash-lobby.duckdns.org:39421/leaderboard.json",
 ]
 STATUS_KEYS = ("online", "rooms", "arenas", "open_rooms", "playing")
