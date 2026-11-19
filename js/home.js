@@ -1,12 +1,12 @@
 /* Home page: live lobby counts (status.json: the official lobbies, Europe and North America East, summed and per region,
-   with a Total / EU / NA switch) and the top 10 Global Mastery Points (mastery.json). Both are snapshots written every few
-   minutes by .github/workflows/leaderboard.yml to the `data` branch (the lobbies are plain HTTP; this page is HTTPS);
-   js/snapshot.js loads them. The "Updated x min ago" labels tick every 30 s between fetches. */
+   with a Total / EU / NA switch: a snapshot written every few minutes by .github/workflows/leaderboard.yml to the `data`
+   branch, as the lobbies are plain HTTP and this page is HTTPS; js/snapshot.js loads it) and the top 10 Global Mastery
+   Points (read from the shared account project, the same numbers as SSBU Arena's site). The "Updated x min ago" labels tick every 30 s between fetches. */
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var STALE_MIN = 20, REFRESH_MS = 60000, TICK_MS = 30000, TOP = 10;
-  var board = null, lastStatus = null;
+  var STALE_MIN = 20, REFRESH_MS = 60000, BOARD_MS = 300000, TICK_MS = 30000, TOP = 10;
+  var lastStatus = null;
 
   var ago = OSUData.ago;
   function num(v) { return typeof v === "number" && isFinite(v) ? String(v) : "-"; }
@@ -83,63 +83,53 @@
 
   function cell(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; e.textContent = text; return e; }
 
-  function pts(p) {
-    var t = typeof p.total === "number" ? p.total : (Number(p.points) || 0) + (Number(p.veteran) || 0);
-    return Math.floor(t).toLocaleString("en-US");
-  }
-  /* Global Mastery Points (GMP), points only: # | fighter icon (the main, or the chosen fighter) | player | GMP. */
-  function render(key) {
-    var body = $("rows"), list;
+  /* Top 10 Global Mastery Points (OpenSmashAuth.masteryBoard: public.opensmash_mastery_board on the shared account project,
+     every region and SSBU Arena summed): # | fighter icon (the main, or the chosen fighter) | player | GMP. */
+  var boardGen = 0;
+  function showBoard(key, res) {
+    var body = $("rows");
     body.textContent = "";
-    if (!board || !board.total.length) {
-      $("table-wrap").hidden = true; $("empty").hidden = false; $("credit").textContent = ""; return;
+    if (!res || !res.rows.length) {
+      $("table-wrap").hidden = true; $("credit").textContent = "";
+      $("empty").textContent = !res ? "Mastery points are not available right now." : key ? "No points with " + OSU_FIGHTER(key) + " yet." : "No mastery points yet. Play online to be the first.";
+      $("empty").hidden = false;
+      return;
     }
     $("empty").hidden = true; $("table-wrap").hidden = false;
     if (!$("credit").firstChild) $("credit").appendChild(OSU_ICON_CREDIT());
-    key = key && Array.isArray(board.fighters[key]) ? key : "";
-    list = (key ? board.fighters[key] : board.total).slice(0, TOP);
-    list.forEach(function (p, i) {
+    res.rows.slice(0, TOP).forEach(function (p) {
       var tr = document.createElement("tr");
-      tr.appendChild(cell("td", "pos", String(p.pos || i + 1)));
+      tr.appendChild(cell("td", "pos", String(p.pos)));
       var fc = cell("td", "ficon-cell", "");
-      fc.appendChild(OSU_FIGHTER_EL(key || p.fighter || ""));
+      fc.appendChild(OSU_FIGHTER_EL(key || p.main_fighter || ""));
       tr.appendChild(fc);
       tr.appendChild(cell("td", "pname", p.name || "Anonymous"));
-      var n = cell("td", "num", pts(p));
-      if (p.veteran > 0) n.title = Math.floor(p.points || 0).toLocaleString("en-US") + " from matches + " + Math.floor(p.veteran).toLocaleString("en-US") + " veteran bonus";
-      tr.appendChild(n);
+      tr.appendChild(cell("td", "num", Math.floor(p.total).toLocaleString("en-US")));
       body.appendChild(tr);
     });
   }
+  function loadBoard() {
+    var A = window.OpenSmashAuth, key = $("fighter").value, mine = ++boardGen;
+    if (!A || !A.masteryBoard) { showBoard(key, null); return; }
+    A.masteryBoard(key || null, TOP, 0).then(function (res) {
+      if (mine !== boardGen) return;
+      showBoard(key, res);
+      if (!key) $("t-mastery").textContent = res.count !== null ? res.count.toLocaleString("en-US") : String(res.rows.length);
+    }, function () {
+      if (mine !== boardGen) return;
+      showBoard(key, null);
+      if (!key) $("t-mastery").textContent = "-";
+    });
+  }
   function fillSelect() {
-    var sel = $("fighter"), keep = sel.value;
-    while (sel.options.length > 1) sel.remove(1);
-    var f = (board && board.fighters) || {};
-    Object.keys(f).filter(function (k) { return Array.isArray(f[k]) && f[k].length; }).sort(function (a, b) {
-      return OSU_FIGHTER(a).localeCompare(OSU_FIGHTER(b));
-    }).forEach(function (k) {
+    var sel = $("fighter");
+    OSU_FIGHTER_KEYS.forEach(function (k) {
       var o = document.createElement("option"); o.value = k; o.textContent = OSU_FIGHTER(k); sel.appendChild(o);
     });
-    sel.value = keep;
-    if (sel.value !== keep) sel.value = "";
   }
 
-  function tickBoardAge() {
-    var a = board && ago(board.updated);
-    $("board-upd").textContent = a ? "Updated " + a.text : "";
-  }
-
-  function refresh() {
+  function refreshStatus() {
     OSUData.load("status.json").then(showStatus).catch(function () { showStatus(null); });
-    OSUData.load("mastery.json").then(function (d) {
-      if (!d || !Array.isArray(d.total)) throw new Error("bad file");
-      if (!d.fighters || typeof d.fighters !== "object" || Array.isArray(d.fighters)) d.fighters = {};
-      board = d;
-      fillSelect();
-      render($("fighter").value);
-      $("t-mastery").textContent = typeof d.players === "number" ? String(d.players) : "-";
-      tickBoardAge();
-    }).catch(function () { board = null; $("t-mastery").textContent = "-"; render(""); tickBoardAge(); });
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -152,14 +142,17 @@
       menu.classList.toggle("open", open); toggle.setAttribute("aria-expanded", String(open));
     });
     menu.addEventListener("click", function (e) { if (e.target.closest("a")) { menu.classList.remove("open"); toggle.setAttribute("aria-expanded", "false"); } });
-    $("fighter").addEventListener("change", function () { render(this.value); });
+    fillSelect();
+    $("fighter").addEventListener("change", loadBoard);
     $("region-switch").addEventListener("click", function (e) {
       var b = e.target.closest("button[data-r]");
       if (b) pickRegion(b.getAttribute("data-r"));
     });
     pickRegion(region);
-    refresh();
-    setInterval(refresh, REFRESH_MS);
-    setInterval(function () { if (lastStatus) showStatus(lastStatus); tickBoardAge(); }, TICK_MS);
+    refreshStatus();
+    loadBoard();
+    setInterval(refreshStatus, REFRESH_MS);
+    setInterval(loadBoard, BOARD_MS);
+    setInterval(function () { if (lastStatus) showStatus(lastStatus); }, TICK_MS);
   });
 })();

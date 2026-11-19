@@ -13,11 +13,11 @@ GPL-3.0 like the project. Not affiliated with Nintendo.
 | `css/style.css` | the shared design |
 | `config.js` | links: repository, Discord |
 | `js/opensmash-auth.js`, `js/opensmash-account-ui.js`, `auth/callback/` | "Sign in with your OpenSmash account" (see below) |
-| `leaderboard/`, `js/mastery.js` | the Mastery page: Global Mastery Points (GMP), top 100 overall and per fighter (# / fighter icon / player / GMP), drawn 50 rows at a time as you scroll; signed in, the player's own GMP, rank and top fighters first |
+| `leaderboard/`, `js/mastery.js` | the Mastery page: Global Mastery Points (GMP) read from the shared account project (`opensmash_mastery_board`), overall and per fighter (# / fighter icon / player / GMP), 50 rows per request as you scroll; signed in, the player's own GMP, rank and top fighters first |
 | `competitive/` | the Competitive page: one line on SSBU Arena's ranked (same account, linked) and its `/embed/leaderboard` iframe at full width |
 | `leaderboard/gsp/`, `js/gsp-archive.js` | the GSP archive: the frozen GSP leaderboard, read only (no longer linked from the other pages) |
 | `js/fighters.js` | fighter names and icons: Max_Hamm's stock icons loaded from ssbuarena.com (no image in this repository), credited under each table; the name's initial if an icon is missing |
-| `account/`, `js/account-mastery.js`, `css/pages.css`, `js/page.js` | the account page (shared OpenSmash account) with the player's own mastery |
+| `account/`, `js/account-mastery.js`, `css/pages.css`, `js/page.js` | the account page (shared OpenSmash account) with the player's own GMP per fighter, the OpenSmash / SSBU Arena split and the rank |
 | `mastery.json`, `leaderboard.json`, `status.json` | fallback copies only (mastery.json empty); the live ones are on the `data` branch |
 | `.github/workflows/leaderboard.yml`, `.github/scripts/leaderboard.py` | the snapshot job |
 | `privacy/`, `terms/`, `404.html`, `robots.txt`, `.nojekyll` | legal pages and Pages extras |
@@ -42,7 +42,8 @@ with `GITHUB_TOKEN` (the workflow needs `actions: write`), so no personal token 
 keeps a single loop; the successor waits as pending. The hourly `schedule` is only a backup if the chain breaks. To restart
 by hand: Actions > Update mastery and status > Run workflow.
 
-- `mastery.json`: `{"updated","regions","players","total":[row],"fighters":{key:[row]}}`, row =
+- `mastery.json` (no longer read by the pages, which read GMP from the shared account project; still written, unused):
+  `{"updated","regions","players","total":[row],"fighters":{key:[row]}}`, row =
   `{"pos","id","name"?,"points","veteran","total"}` (+ `"fighter"`, the most played, in `total`). Built from every lobby's
   `/mastery.json`: points are SUMMED over the regions (each region counts only its own matches), the one-time veteran
   bonus is the largest per account and fighter (never summed). Engagement points, not a skill ranking: no levels, no tiers.
@@ -76,9 +77,14 @@ client of the accounts service (Supabase Auth OAuth 2.1 server): authorization c
 `supabase-js`, no server. "Sign in" goes to `https://account.opensmashultimate.com`, comes back to `auth/callback/`
 with a one-time code, and `js/opensmash-auth.js` (`window.OpenSmashAuth`) exchanges it for this site's own session.
 `js/opensmash-account-ui.js` wires the panel on `account/` (ids `osa-*`); `js/nav-login.js` shows `Name#0042` in the
-top bar. `account/` also shows the player's own mastery (`OpenSmashAuth.myMastery()`: the RPC
-`my_opensmash_mastery()` with the same publishable key and the player's token; until it is deployed the panel says "not
-available yet").
+top bar.
+
+Mastery points (GMP) have one source, the shared account project, which sums every region (EU, NA East; each lobby pushes
+hourly) and SSBU Arena, so this site and ssbuarena.com show the same numbers. `js/opensmash-auth.js`:
+`masteryBoard(fighter, limit, offset)` = `public.opensmash_mastery_board(p_fighter, p_limit, p_offset)` with the publishable
+key only (the Mastery page, 50 rows a request, and the home's top 10); `myMastery()` = `my_opensmash_mastery()` and
+`myMasteryRank()` = `my_opensmash_mastery_rank()` with the player's token (the Mastery page's own status and `account/`).
+If the project cannot be reached the pages say so; there is no fallback to the lobbies' own copy (its numbers would differ).
 
 - The sign-in talks only to `gnufjvqwynxmudpgrded.supabase.co` and `account.opensmashultimate.com`. The session (access
   and refresh token, player id, name, tag, rating) is kept in this browser's `localStorage` under `osu_account` until

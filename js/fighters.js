@@ -32,6 +32,15 @@
     return has(N, key) ? N[key] : key;
   };
 
+  /* Every fighter once, by the key the points are stored under (the keys SSBU Arena's database maps names to): the
+     mastery page's fighter list, in name order. */
+  window.OSU_FIGHTER_KEYS = ("mario donkey link samus samusd yoshi kirby fox pikachu luigi ness captain purin peach daisy koopa " +
+    "ice_climber sheik zelda mariod pichu falco marth lucina younglink ganon mewtwo roy chrom gamewatch metaknight pit pitb szerosuit " +
+    "wario snake ike ptrainer diddy lucas sonic dedede pikmin lucario robot toonlink wolf murabito rockman wiifit rosetta littlemac " +
+    "gekkouga palutena pacman reflet shulk koopajr duckhunt ryu ken cloud kamui bayonetta inkling ridley simon richter krool shizue " +
+    "gaogaen packun jack brave buddy dolly master tantan pickel edge element demon trail miifighter miiswordsman miigunner").split(" ")
+    .sort(function (a, b) { return window.OSU_FIGHTER(a).localeCompare(window.OSU_FIGHTER(b)); });
+
   var ICON_BASE = "https://www.ssbuarena.com/fighters/";
   /* The folders SSBU Arena serves (its src/lib/fighter-icons.ts); costume 1 of each, except Ridley (5: it has no 1). */
   var ICONS = ("bayonetta brave buddy captain chrom cloud daisy dedede demon diddy dolly donkey duckhunt edge eflame elight " +

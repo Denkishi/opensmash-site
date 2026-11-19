@@ -36,14 +36,6 @@
         return OSUData.load("leaderboard.json", localPrefix).then(check);
       });
     },
-    /* mastery.json: {updated, regions, players, total: [rows], fighters: {key: [rows]}} (.github/scripts/leaderboard.py). */
-    loadMastery: function (localPrefix) {
-      return OSUData.load("mastery.json", localPrefix == null ? "../" : localPrefix).then(function (d) {
-        if (!d || !Array.isArray(d.total)) throw new Error("bad file");
-        if (!d.fighters || typeof d.fighters !== "object" || Array.isArray(d.fighters)) d.fighters = {};
-        return d;
-      });
-    },
     fmtNum: function (n) {
       return typeof n === "number" && isFinite(n) ? Math.floor(n).toLocaleString("en-US") : "-";
     },
