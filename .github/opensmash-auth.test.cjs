@@ -342,6 +342,44 @@ test("fetchProfile: server error rejects but keeps the session", async () => {
   assert.equal(env.A.signedIn(), true);
 });
 
+test("myMastery: exact RPC request, rows checked and sorted by total", async () => {
+  const f = makeFetch(c => c.url.endsWith("/rest/v1/rpc/my_opensmash_mastery") ? { status: 200, body: [
+    { fighter: "mario", points: 120, veteran: 1000, total: 1120, games: 3, wins: 1, updated_at: "x" },
+    { fighter: "pzenigame", points: "2400", veteran: 0, total: 2400, games: 30 },
+    { fighter: "<b>", points: 5 }, null, { fighter: "fox", points: -4, veteran: null, games: 1 }] } : { status: 500, body: {} });
+  const env = makeEnv({ fetch: f });
+  seedSession(env);
+  const rows = await env.A.myMastery();
+  assert.deepEqual(rows, [
+    { fighter: "pzenigame", points: 2400, veteran: 0, total: 2400, games: 30 },
+    { fighter: "mario", points: 120, veteran: 1000, total: 1120, games: 3 },
+    { fighter: "fox", points: 0, veteran: 0, total: 0, games: 1 }]);
+  const c = f.calls[0];
+  assert.equal(f.calls.length, 1);
+  assert.equal(c.method, "POST");
+  assert.equal(c.url, "https://gnufjvqwynxmudpgrded.supabase.co/rest/v1/rpc/my_opensmash_mastery");
+  assert.equal(c.body, "{}");
+  assert.equal(c.headers.apikey, KEY);
+  assert.equal(c.headers["Content-Type"], "application/json");
+  assert.equal(c.headers.Authorization, "Bearer " + JSON.parse(env.ls.getItem("osu_account")).access);
+});
+
+test("myMastery: signed out -> null without a request; 404 (not deployed) -> .missing; 401 twice ends the session", async () => {
+  const f0 = makeFetch(() => ({ status: 200, body: [] }));
+  const e0 = makeEnv({ fetch: f0 });
+  assert.equal(await e0.A.myMastery(), null);
+  assert.equal(f0.calls.length, 0);
+  const e1 = makeEnv({ fetch: makeFetch(() => ({ status: 404, body: { code: "PGRST202" } })) });
+  seedSession(e1);
+  await assert.rejects(e1.A.myMastery(), e => e.missing === true);
+  assert.equal(e1.A.signedIn(), true);
+  const f2 = makeFetch(c => c.url === TOKEN_URL ? { status: 200, body: tokenReply(7) } : { status: 401, body: {} });
+  const e2 = makeEnv({ fetch: f2 }); seedSession(e2);
+  assert.equal(await e2.A.myMastery(), null);
+  assert.deepEqual(f2.calls.map(c => c.url === TOKEN_URL ? "token" : "rpc"), ["rpc", "token", "rpc"]);
+  assert.equal(e2.A.signedIn(), false);
+});
+
 test("signOut is local only: no request, session and pending gone, event fired", async () => {
   const f = makeFetch(() => ({ status: 200, body: {} }));
   const env = makeEnv({ fetch: f });

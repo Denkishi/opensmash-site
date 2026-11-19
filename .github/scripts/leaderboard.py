@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
-"""Build leaderboard.json from the OpenSmash lobby servers. Standard library only.
+"""Build mastery.json and status.json from the OpenSmash lobby servers. Standard library only.
 
-Every public lobby serves GET http://<host>:39421/leaderboard.json (plain HTTP). This script fetches all of them,
-merges players by their opaque "id" (per fighter the highest GSP seen on any lobby; name/discord/avatar from any lobby
-that has them; the avatar only as a Discord CDN URL), recomputes the global positions and writes leaderboard.json at the repository root.
+Mastery points (OPENSMASH_MASTERY_SPEC v1): points per account and per fighter, earned by playing online, that only go
+up. Engagement points, not a skill ranking: no levels, no tiers. The competitive ladder is SSBU Arena's ranked.
 
-Lobbies: LOBBIES below, or the LOBBIES environment variable (comma-separated URLs).
-If no lobby answers, the script exits 0 and leaves the file alone. The file is only rewritten when the data changed
-(ignoring "updated"), so the workflow commits only real changes.
+Every public lobby serves GET http://<host>:39421/mastery.json (plain HTTP):
+  {"region", "updated", "fighters": {"<key>": [{"id", "name", "points", "veteran"}, ... top 100]}, "total": [... top 100]}
+Each region counts only its own matches, so points are SUMMED over the regions; the one-time veteran bonus is per
+(account, fighter) and may be granted by more than one region, so the LARGEST one is kept (never summed).
+A player's total = summed points + the veteran of each fighter (see merge() for the overall list).
+
+The GSP leaderboard is frozen: the last leaderboard.json snapshot is copied once to gsp_archive.json (read only, the
+site's "GSP archive") and leaderboard.json is no longer rewritten.
+
+Lobbies: LOBBIES below, or the LOBBIES environment variable (comma-separated URLs; any file name at the end is replaced:
+".../leaderboard.json" still works). A lobby without /mastery.json (404, down, bad JSON) is skipped. If no lobby answers,
+mastery.json is left alone; a region that stops answering keeps its last known
+points (mastery_regions.json). Files are only rewritten when the data changed (ignoring "updated"), so the workflow
+commits only real changes.
 Offline test: python .github/scripts/leaderboard.py --selftest
 """
 import json
@@ -19,10 +29,10 @@ from datetime import datetime, timezone
 
 LOBBIES = [
     # v0.5.0: the official lobbies (relay only, signed-in players; run by SSBU Arena)
-    "http://eu.lobby.opensmashultimate.com:39421/leaderboard.json",
-    "http://na.lobby.opensmashultimate.com:39421/leaderboard.json",
-    # v0.4.x players, until they update
-    "http://opensmash-lobby.duckdns.org:39421/leaderboard.json",
+    "http://eu.lobby.opensmashultimate.com:39421/",
+    "http://na.lobby.opensmashultimate.com:39421/",
+    # v0.4.x players, until they update (no /mastery.json there: skipped; its /status.json still counts)
+    "http://opensmash-lobby.duckdns.org:39421/",
 ]
 STATUS_KEYS = ("online", "rooms", "arenas", "open_rooms", "playing")
 MATCH_MODES = ("quickplay", "arena", "room")
@@ -33,135 +43,182 @@ _DATA = os.environ.get("DATA_DIR") or _ROOT
 # 0 (default) = never rewrite unchanged data.
 HEARTBEAT_S = int(os.environ.get("HEARTBEAT_S", "0") or 0)
 STATUS_PATH = os.path.join(_DATA, "status.json")
+MASTERY_PATH = os.path.join(_DATA, "mastery.json")
+GSP_PATH = os.path.join(_DATA, "leaderboard.json")
+GSP_ARCHIVE_PATH = os.path.join(_DATA, "gsp_archive.json")
+# The last /mastery.json of each region (without "updated"): a lobby that is down for a while keeps its last points in the
+# sum instead of dropping out of it (points only go up, so old numbers are late, never wrong). Written only on a change.
+REGIONS_PATH = os.path.join(_DATA, "mastery_regions.json")
 TIMEOUT_S = 20
-MAX_PLAYERS = 10000
-TOP_PER_FIGHTER = 100
-OUT_PATH = os.path.join(_DATA, "leaderboard.json")
-ID_RE = re.compile(r"^[0-9a-f]{16}$")
-# A Discord profile picture as the lobby gives it (tools/nex/board.py): uploaded, or Discord's default one.
+TOP = 100                 # rows kept in the overall list and in each fighter's list
+VETERAN_MAX = 1000        # the one-time veteran bonus of one (account, fighter)
+POINTS_MAX = 10 ** 12     # a sanity bound: a bigger number from a lobby is a broken file, not points
+# The lobby's opaque id (no account uuid, pid or Discord id) and the fighter key (ui_chara_<key>: "mario", "pzenigame").
+ID_RE = re.compile(r"^[A-Za-z0-9_-]{6,64}$")
+KEY_RE = re.compile(r"^[a-z0-9_]{2,32}$")
+REGION_RE = re.compile(r"^[a-z0-9-]{1,16}$")
+# A Discord profile picture (only if a lobby ever lists one): uploaded, or Discord's default one.
 AVATAR_RE = re.compile(r"^https://cdn\.discordapp\.com/(avatars/[0-9]{1,32}/(a_)?[0-9a-f]{32}\.png\?size=64|embed/avatars/[0-5]\.png)$")
-
-FIGHTERS = {
-    0: "Mario", 1: "Donkey Kong", 2: "Link", 3: "Samus", 4: "Dark Samus", 5: "Yoshi", 6: "Kirby", 7: "Fox",
-    8: "Pikachu", 9: "Luigi", 10: "Ness", 11: "Captain Falcon", 12: "Jigglypuff", 13: "Peach", 14: "Daisy",
-    15: "Bowser", 16: "Sheik", 17: "Zelda", 18: "Dr. Mario", 19: "Pichu", 20: "Falco", 21: "Marth", 22: "Lucina",
-    23: "Young Link", 24: "Ganondorf", 25: "Mewtwo", 26: "Roy", 27: "Chrom", 28: "Mr. Game & Watch",
-    29: "Meta Knight", 30: "Pit", 31: "Dark Pit", 32: "Zero Suit Samus", 33: "Wario", 34: "Snake", 35: "Ike",
-    36: "Squirtle", 37: "Ivysaur", 38: "Charizard", 39: "Diddy Kong", 40: "Lucas", 41: "Sonic", 42: "King Dedede",
-    43: "Olimar", 44: "Lucario", 45: "R.O.B.", 46: "Toon Link", 47: "Wolf", 48: "Villager", 49: "Mega Man",
-    50: "Wii Fit Trainer", 51: "Rosalina & Luma", 52: "Little Mac", 53: "Greninja", 54: "Palutena", 55: "Pac-Man",
-    56: "Robin", 57: "Shulk", 58: "Bowser Jr.", 59: "Duck Hunt", 60: "Ryu", 61: "Ken", 62: "Cloud", 63: "Corrin",
-    64: "Bayonetta", 65: "Inkling", 66: "Ridley", 67: "Simon", 68: "Richter", 69: "King K. Rool", 70: "Isabelle",
-    71: "Incineroar", 72: "Mii Brawler", 73: "Mii Swordfighter", 74: "Mii Gunner", 75: "Ice Climbers",
-    81: "Piranha Plant", 82: "Joker", 83: "Hero", 84: "Banjo & Kazooie", 85: "Terry", 86: "Byleth", 87: "Min Min",
-    88: "Steve", 89: "Sephiroth", 90: "Pyra", 91: "Mythra", 92: "Kazuya", 93: "Sora", 114: "Pokemon Trainer",
-}
 
 
 def log(msg):
     print(msg, flush=True)
 
 
+def now_iso():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def fetch(url):
-    """Returns the parsed JSON of one lobby, or None on any failure (not deployed yet, down, 404, bad JSON)."""
+    """Returns the parsed JSON of one lobby file, or None on any failure (not deployed yet, down, 404, bad JSON)."""
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "opensmash-site-leaderboard"})
+        req = urllib.request.Request(url, headers={"User-Agent": "opensmash-site-snapshot"})
         with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:
             return json.loads(r.read(20_000_000).decode("utf-8"))
     except Exception as e:  # noqa: BLE001 - every failure just means "skip this lobby"
-        log("lobby %s: unavailable (%s)" % (url, type(e).__name__))
+        log("%s: unavailable (%s)" % (url, type(e).__name__))
         return None
 
 
-def _int(v):
+def lobby_file(url, name):
+    """"http://h:39421/leaderboard.json" or "http://h:39421/" -> "http://h:39421/<name>"."""
+    return url.rsplit("/", 1)[0] + "/" + name
+
+
+def _int(v, top=None):
     try:
         if isinstance(v, bool):
             return None
         n = int(v)
-        return n if n >= 0 else None
-    except (TypeError, ValueError):
+        if n < 0 or (top is not None and n > top):
+            return None
+        return n
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
-def merge(lobbies):
-    """lobbies: parsed lobby documents. Returns {id: {"gsp": {kind: gsp}, "name", "discord"}}."""
-    merged = {}
-    for doc in lobbies:
-        if not isinstance(doc, dict) or not isinstance(doc.get("players"), list):
+def _row(r):
+    """One lobby row -> (id, name, avatar, points, veteran), or None for a row to ignore."""
+    if not isinstance(r, dict):
+        return None
+    rid = r.get("id")
+    if not isinstance(rid, str) or not ID_RE.match(rid):
+        return None
+    pts, vet = _int(r.get("points"), POINTS_MAX), _int(r.get("veteran", 0), POINTS_MAX)
+    if pts is None:
+        return None
+    name = r.get("name")
+    name = name.strip()[:64] if isinstance(name, str) and name.strip() else None
+    av = r.get("avatar")
+    av = av if isinstance(av, str) and AVATAR_RE.match(av) else None
+    return rid, name, av, pts, vet or 0
+
+
+def merge(docs):
+    """docs: parsed lobby /mastery.json documents. Returns (players, regions):
+    players = {id: {"name", "avatar", "fighters": {key: [points, veteran]}, "tot_points", "tot_vet"}}.
+
+    Per fighter: points summed over the regions, veteran = the largest (max 1000).
+    Overall (the lobbies' "total" rows): points summed; for the veteran the best estimate the lists allow, since each
+    lobby sends only its top 100 per fighter: the largest of (a) the largest "total" veteran of one region and (b) the sum
+    over the fighters seen of their largest veteran, never more than the sum over the regions (a fighter's bonus counted
+    twice). Likewise the points: the larger of the summed "total" rows and the summed fighter rows."""
+    players, regions = {}, []
+    for doc in docs:
+        if not isinstance(doc, dict) or not isinstance(doc.get("fighters"), dict):
             continue
-        for p in doc["players"]:
-            if not isinstance(p, dict):
+        region = doc.get("region")
+        region = region.lower() if isinstance(region, str) and REGION_RE.match(region.lower()) else "?%d" % len(regions)
+        if region in regions:  # two addresses of the same lobby: count its points once
+            log("region %s listed twice: the second copy is skipped" % region)
+            continue
+        regions.append(region)
+
+        def player(rid, name, av):
+            p = players.setdefault(rid, {"name": None, "avatar": None, "fighters": {}, "tot_points": 0, "tot_vet_max": 0,
+                                         "tot_vet_sum": 0, "regions": set()})
+            if name and not p["name"]:
+                p["name"] = name
+            if av and not p["avatar"]:
+                p["avatar"] = av
+            return p
+
+        for key, rows in doc["fighters"].items():
+            if not isinstance(key, str) or not KEY_RE.match(key) or not isinstance(rows, list):
                 continue
-            pid = str(p.get("id", "")).lower()
-            if not ID_RE.match(pid):
+            seen = set()
+            for r in rows[:TOP * 5]:
+                row = _row(r)
+                if not row or row[0] in seen:
+                    continue
+                seen.add(row[0])
+                rid, name, av, pts, vet = row
+                f = player(rid, name, av)["fighters"].setdefault(key, [0, 0])
+                f[0] += pts
+                f[1] = max(f[1], min(vet, VETERAN_MAX))
+        seen = set()
+        for r in (doc.get("total") if isinstance(doc.get("total"), list) else [])[:TOP * 5]:
+            row = _row(r)
+            if not row or row[0] in seen:
                 continue
-            m = merged.setdefault(pid, {"gsp": {}, "name": None, "discord": None, "avatar": None})
-            per = {}
-            if isinstance(p.get("fighters"), dict):
-                for k, v in p["fighters"].items():
-                    kind, gsp = _int(k), _int(v.get("gsp") if isinstance(v, dict) else None)
-                    if kind is not None and gsp is not None:
-                        per[kind] = gsp
-            kind, gsp = _int(p.get("fighter")), _int(p.get("gsp"))
-            if kind is not None and gsp is not None:
-                per[kind] = max(per.get(kind, 0), gsp)
-            for kind, gsp in per.items():
-                if gsp > m["gsp"].get(kind, -1):
-                    m["gsp"][kind] = gsp
-            name = p.get("name")
-            if isinstance(name, str) and name.strip() and not m["name"]:
-                m["name"] = name.strip()[:64]
-            d = p.get("discord")
-            if isinstance(d, str) and ID_RE.match(d.lower()) and not m["discord"]:
-                m["discord"] = d.lower()
-            av = p.get("avatar")
-            if isinstance(av, str) and AVATAR_RE.match(av) and not m["avatar"]:
-                m["avatar"] = av
-    return {k: v for k, v in merged.items() if v["gsp"]}
+            seen.add(row[0])
+            rid, name, av, pts, vet = row
+            p = player(rid, name, av)
+            p["tot_points"] += pts
+            p["tot_vet_max"] = max(p["tot_vet_max"], vet)
+            p["tot_vet_sum"] += vet
+            p["regions"].add(region)
+    return players, regions
 
 
-def build(merged, now_iso):
-    rows = []
-    for pid, m in merged.items():
-        kind, gsp = sorted(m["gsp"].items(), key=lambda kv: (-kv[1], kv[0]))[0]
-        rows.append((pid, m, kind, gsp))
-    rows.sort(key=lambda r: (-r[3], r[0]))
-    rows = rows[:MAX_PLAYERS]
+def _total_of(p):
+    """(points, veteran) of a player's overall row: see merge()."""
+    f_points = sum(v[0] for v in p["fighters"].values())
+    f_vet = sum(v[1] for v in p["fighters"].values())
+    points = max(p["tot_points"], f_points)
+    vet = max(p["tot_vet_max"], f_vet)
+    if p["regions"]:
+        vet = min(vet, max(p["tot_vet_sum"], f_vet))
+    return points, vet
 
-    per_fighter = {}  # kind -> [(gsp, id)]
-    for pid, m, _, _ in rows:
-        for kind, gsp in m["gsp"].items():
-            per_fighter.setdefault(kind, []).append((gsp, pid))
-    fighter_rank = {}
-    for kind, lst in per_fighter.items():
-        lst.sort(key=lambda t: (-t[0], t[1]))
-        for pos, (_, pid) in enumerate(lst, 1):
-            fighter_rank[(kind, pid)] = pos
-    by_id = {r[0]: r[1] for r in rows}
-    tables = {}
-    for kind in sorted(per_fighter):
-        top = []
-        for pos, (gsp, pid) in enumerate(per_fighter[kind][:TOP_PER_FIGHTER], 1):
-            row = {"rank": pos, "gsp": gsp, "id": pid}
-            if by_id[pid]["name"]:
-                row["name"] = by_id[pid]["name"]
-            if by_id[pid]["avatar"]:
-                row["avatar"] = by_id[pid]["avatar"]
-            top.append(row)
-        tables[str(kind)] = {"name": FIGHTERS.get(kind, "Fighter %d" % kind), "top": top}
 
-    players = []
-    for pos, (pid, m, kind, gsp) in enumerate(rows, 1):
-        p = {"id": pid, "rank": pos, "gsp": gsp, "fighter": kind,
-             "fighters": {str(k): {"gsp": g, "rank": fighter_rank[(k, pid)]} for k, g in sorted(m["gsp"].items())}}
-        if m["name"]:
-            p["name"] = m["name"]
-        if m["discord"]:
-            p["discord"] = m["discord"]
-        if m["avatar"]:
-            p["avatar"] = m["avatar"]
-        players.append(p)
-    return {"updated": now_iso, "ranked": len(players), "players": players, "fighters": tables}
+def _out_row(pos, pid, p, points, vet):
+    row = {"pos": pos, "id": pid, "points": points, "veteran": vet, "total": points + vet}
+    if p["name"]:
+        row["name"] = p["name"]
+    if p["avatar"]:
+        row["avatar"] = p["avatar"]
+    return row
+
+
+def build(players, regions, updated):
+    """The site's mastery.json: {"updated", "regions", "players", "total": [rows], "fighters": {key: [rows]}};
+    row = {"pos", "id", "name"?, "avatar"?, "points", "veteran", "total" (= points + veteran)}; overall rows also
+    "fighter": the key of the player's fighter with the most mastery. Points only: no levels, no tiers."""
+    overall = []
+    for pid, p in players.items():
+        points, vet = _total_of(p)
+        if points + vet <= 0:
+            continue
+        main = sorted(p["fighters"].items(), key=lambda kv: (-(kv[1][0] + kv[1][1]), kv[0]))
+        overall.append((points + vet, points, pid, vet, main[0][0] if main else None))
+    overall.sort(key=lambda t: (-t[0], -t[1], t[2]))
+    total = []
+    for pos, (_, points, pid, vet, main) in enumerate(overall[:TOP], 1):
+        row = _out_row(pos, pid, players[pid], points, vet)
+        if main:
+            row["fighter"] = main
+        total.append(row)
+    fighters = {}
+    per = {}
+    for pid, p in players.items():
+        for key, (points, vet) in p["fighters"].items():
+            if points + vet > 0:
+                per.setdefault(key, []).append((points + vet, points, pid, vet))
+    for key in sorted(per):
+        lst = sorted(per[key], key=lambda t: (-t[0], -t[1], t[2]))[:TOP]
+        fighters[key] = [_out_row(pos, pid, players[pid], points, vet) for pos, (_, points, pid, vet) in enumerate(lst, 1)]
+    return {"updated": updated, "regions": sorted(regions), "players": len(overall), "total": total, "fighters": fighters}
 
 
 def same_data(a, b):
@@ -178,17 +235,36 @@ def same_data(a, b):
     return True
 
 
-def status_url(url):
-    return url.rsplit("/", 1)[0] + "/status.json"
+def read_json(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
 
 
-def build_status(docs, ranked, now_iso):
+def write_json(path, doc):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
+        f.write("\n")
+    os.replace(tmp, path)
+
+
+def write_if_changed(path, new):
+    if same_data(read_json(path), new):
+        return False
+    write_json(path, new)
+    return True
+
+
+def build_status(docs, updated):
     """Sum the lobbies' aggregate counts. docs: parsed /status.json documents (counts only)."""
-    out = {"updated": now_iso, "up": True}
+    out = {"updated": updated, "up": True}
     for k in STATUS_KEYS:
         out[k] = sum(n for n in (_int(d.get(k)) for d in docs if isinstance(d, dict)) if n is not None)
-    out["ranked"] = ranked
-    # (online matches played, from lobbies that count them: tools/nex/matches.py; left out until one does)
+    # (online matches played, from lobbies that count them; left out until one does)
     played = [d["matches"] for d in docs if isinstance(d, dict) and isinstance(d.get("matches"), dict)
               and _int(d["matches"].get("total")) is not None]
     if played:
@@ -199,132 +275,171 @@ def build_status(docs, ranked, now_iso):
     return out
 
 
-def write_if_changed(path, new):
-    old = None
-    try:
-        with open(path, encoding="utf-8") as f:
-            old = json.load(f)
-    except (OSError, ValueError):
-        pass
-    if same_data(old, new):
-        return False
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(new, f, ensure_ascii=False, separators=(",", ":"))
-        f.write("\n")
-    return True
-
-
-def run_status(urls, ranked, status_path, fetcher, board_up):
-    """status.json: live counts. A lobby without /status.json yet is skipped (the file is left alone); when no lobby
-    answers at all the file says {"up": false}."""
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    docs = [d for d in (fetcher(status_url(u)) for u in urls) if d is not None]
+def run_status(urls, status_path, fetcher, mastery_up):
+    """status.json: live counts. A lobby without /status.json is skipped; when no lobby answers at all (neither
+    /status.json nor /mastery.json) the file says {"up": false}."""
+    docs = [d for d in (fetcher(lobby_file(u, "status.json")) for u in urls) if isinstance(d, dict)]
     if docs:
-        new = build_status(docs, ranked, now)
-    elif not board_up:
-        new = {"updated": now, "up": False}
+        new = build_status(docs, now_iso())
+    elif not mastery_up:
+        new = {"updated": now_iso(), "up": False}
     else:
-        log("no lobby serves /status.json yet: leaving status.json alone")
+        log("no lobby serves /status.json: leaving status.json alone")
         return
     log("status.json %s" % ("written" if write_if_changed(status_path, new) else "unchanged"))
 
 
-def run(urls, out_path=OUT_PATH, fetcher=fetch, status_path=STATUS_PATH):
-    docs = [d for d in (fetcher(u) for u in urls) if d is not None]
+def freeze_gsp(gsp_path=GSP_PATH, archive_path=GSP_ARCHIVE_PATH):
+    """Once: the last GSP snapshot becomes gsp_archive.json (read only on the site). Never overwritten afterwards."""
+    if not archive_path or os.path.exists(archive_path):
+        return False
+    old = read_json(gsp_path)
+    if not isinstance(old, dict) or not isinstance(old.get("players"), list):
+        return False
+    old["frozen"] = now_iso()
+    write_json(archive_path, old)
+    log("GSP leaderboard frozen: %s (%d players)" % (os.path.basename(archive_path), len(old["players"])))
+    return True
+
+
+def with_cached_regions(docs, regions_path):
+    """docs + the last known document of every region that did not answer now (REGIONS_PATH)."""
+    if not regions_path:
+        return docs
+    cache = read_json(regions_path)
+    cache = cache if isinstance(cache, dict) else {}
+    changed, fresh = False, set()
+    for d in docs:
+        r = d.get("region")
+        if not isinstance(r, str) or not REGION_RE.match(r.lower()) or not isinstance(d.get("fighters"), dict):
+            continue
+        fresh.add(r.lower())
+        keep = {k: v for k, v in d.items() if k != "updated"}
+        if cache.get(r.lower()) != keep:
+            cache[r.lower()] = keep
+            changed = True
+    if changed:
+        write_json(regions_path, cache)
+    late = [cache[r] for r in sorted(cache) if r not in fresh and isinstance(cache[r], dict)]
+    if late:
+        log("last known points used for: %s" % ", ".join(r for r in sorted(cache) if r not in fresh))
+    return docs + late
+
+
+def run(urls, out_path=MASTERY_PATH, fetcher=fetch, status_path=STATUS_PATH, gsp_path=GSP_PATH, archive_path=GSP_ARCHIVE_PATH,
+        regions_path=REGIONS_PATH):
+    freeze_gsp(gsp_path, archive_path)
+    docs = [d for d in (fetcher(lobby_file(u, "mastery.json")) for u in urls) if isinstance(d, dict)]
     if status_path:
-        ranked = sum(_int(d.get("ranked")) or 0 for d in docs if isinstance(d, dict))
-        run_status(urls, ranked, status_path, fetcher, bool(docs))
+        run_status(urls, status_path, fetcher, bool(docs))
     if not docs:
-        log("no lobby answered: leaving leaderboard.json alone")
+        log("no lobby serves /mastery.json: leaving mastery.json alone")
         return 0
-    new = build(merge(docs), datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
-    old = None
-    try:
-        with open(out_path, encoding="utf-8") as f:
-            old = json.load(f)
-    except (OSError, ValueError):
-        pass
-    if same_data(old, new):
-        log("data unchanged (%d players): not rewriting" % new["ranked"])
-        return 0
-    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
-    with open(out_path, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(new, f, ensure_ascii=False, separators=(",", ":"))
-        f.write("\n")
-    log("wrote %d players from %d lobbies" % (new["ranked"], len(docs)))
+    # one order whatever answered first, so the name kept (the first one seen) does not flip between runs
+    all_docs = sorted(with_cached_regions(docs, regions_path), key=lambda d: str(d.get("region") or "~").lower())
+    players, regions = merge(all_docs)
+    new = build(players, regions, now_iso())
+    if write_if_changed(out_path, new):
+        log("mastery.json written: %d players from %s" % (new["players"], ", ".join(new["regions"])))
+    else:
+        log("mastery.json unchanged (%d players)" % new["players"])
     return 0
 
 
 def selftest():
     import tempfile
-    a = {"updated": "x", "ranked": 2, "players": [
-        {"id": "3f9a0c1d2e4b5a69", "rank": 1, "gsp": 2000, "fighter": 43, "fighters": {"43": {"gsp": 2000, "rank": 1}},
-         "name": "Nelly", "discord": "ab12cd34ef56ab78", "avatar": "https://cdn.discordapp.com/embed/avatars/3.png"},
-        {"id": "77aa000000000001", "rank": 2, "gsp": 1500, "fighter": 43,
-         "fighters": {"0": {"gsp": 900, "rank": 1}, "43": {"gsp": 1500, "rank": 2}}}]}
-    b = {"players": [
-        {"id": "77aa000000000001", "gsp": 1700, "fighter": 0, "fighters": {"0": {"gsp": 1700, "rank": 1}},
-         "name": "<b>Bob</b>", "discord": "1111222233334444", "avatar": "javascript:alert(1)"},
-        {"id": "3f9a0c1d2e4b5a69", "gsp": 1800, "fighter": 43, "fighters": {"43": {"gsp": 1800, "rank": 2}}},
-        {"id": "zz", "gsp": 5, "fighter": 1}]}
-    docs = {"http://a/l.json": a, "http://b/l.json": b}
-    fetcher = lambda u: docs.get(u)  # noqa: E731 - "http://c/l.json" is a missing lobby
-    urls = ["http://a/l.json", "http://c/l.json", "http://b/l.json"]
-    out = build(merge([a, b]), "T")
-    ps = {p["id"]: p for p in out["players"]}
-    n, bob = ps["3f9a0c1d2e4b5a69"], ps["77aa000000000001"]
-    assert out["ranked"] == 2 and len(ps) == 2, out
-    assert n["rank"] == 1 and n["gsp"] == 2000 and n["name"] == "Nelly" and n["discord"] == "ab12cd34ef56ab78"
-    assert bob["rank"] == 2 and bob["gsp"] == 1700 and bob["fighter"] == 0 and bob["name"] == "<b>Bob</b>"
-    assert bob["fighters"] == {"0": {"gsp": 1700, "rank": 1}, "43": {"gsp": 1500, "rank": 2}}, bob
-    assert n["avatar"] == "https://cdn.discordapp.com/embed/avatars/3.png" and "avatar" not in bob, "only Discord CDN avatars"
-    assert AVATAR_RE.match("https://cdn.discordapp.com/avatars/175928847299117063/a_" + "0" * 32 + ".png?size=64")
-    assert not AVATAR_RE.match("https://cdn.discordapp.com.evil.example/embed/avatars/1.png")
-    assert out["fighters"]["43"]["top"][0] == {"rank": 1, "gsp": 2000, "id": n["id"], "name": "Nelly",
-                                               "avatar": "https://cdn.discordapp.com/embed/avatars/3.png"}
-    assert out["fighters"]["0"]["name"] == "Mario"
+    eu = {"region": "eu", "updated": "x",
+          "fighters": {"mario": [{"id": "acc_A1", "name": "Nelly", "points": 900, "veteran": 1000},
+                                 {"id": "acc_B2", "points": 300, "veteran": 0}],
+                       "pzenigame": [{"id": "acc_A1", "name": "Nelly", "points": 50, "veteran": 0}],
+                       "Bad Key": [{"id": "acc_A1", "points": 99999}],
+                       "fox": [{"id": "x", "points": 5}, {"id": "acc_C3", "points": "7"}, {"id": "acc_D4", "points": -1},
+                               {"id": "acc_E5", "points": True}, "junk"]},
+          "total": [{"id": "acc_A1", "name": "Nelly", "points": 950, "veteran": 1000},
+                    {"id": "acc_B2", "points": 300, "veteran": 0}, {"id": "acc_C3", "points": 7, "veteran": 0}]}
+    na = {"region": "na-east", "updated": "y",
+          "fighters": {"mario": [{"id": "acc_A1", "name": "<b>Nelly2</b>", "points": 100, "veteran": 1000},
+                                 {"id": "acc_B2", "name": "Bob", "points": 2000, "veteran": 5000}],
+                       "fox": [{"id": "acc_B2", "name": "Bob", "points": 40, "veteran": 1000}]},
+          "total": [{"id": "acc_B2", "name": "Bob", "points": 2040, "veteran": 2000},
+                    {"id": "acc_A1", "name": "Nelly2", "points": 100, "veteran": 1000}]}
+    na_copy = dict(na)  # the same region at a second address: counted once
+    players, regions = merge([eu, na, na_copy, {"fighters": "x"}, "junk", None])
+    out = build(players, regions, "T")
+    assert out["regions"] == ["eu", "na-east"], out["regions"]
+    fm = {r["id"]: r for r in out["fighters"]["mario"]}
+    # per fighter: points summed over regions, veteran = the largest one (capped at 1000)
+    assert fm["acc_A1"]["points"] == 1000 and fm["acc_A1"]["veteran"] == 1000 and fm["acc_A1"]["total"] == 2000, fm
+    assert fm["acc_B2"]["points"] == 2300 and fm["acc_B2"]["veteran"] == 1000 and fm["acc_B2"]["total"] == 3300, fm
+    assert [r["id"] for r in out["fighters"]["mario"]] == ["acc_B2", "acc_A1"] and out["fighters"]["mario"][0]["pos"] == 1
+    assert fm["acc_A1"]["name"] == "Nelly" and fm["acc_B2"]["name"] == "Bob", "first name seen; Bob named by NA"
+    assert "Bad Key" not in out["fighters"], "fighter keys are checked"
+    assert [r["id"] for r in out["fighters"]["fox"]] == ["acc_B2", "acc_C3"], out["fighters"]["fox"]
+    assert out["fighters"]["fox"][1]["points"] == 7, "numeric strings are accepted, negatives/booleans/bad ids are not"
+    tot = {r["id"]: r for r in out["total"]}
+    # A: points 950 (EU) + 100 (NA) = 1050; veteran: Mario's, once (1000), not 2000
+    assert tot["acc_A1"]["points"] == 1050 and tot["acc_A1"]["veteran"] == 1000 and tot["acc_A1"]["total"] == 2050, tot["acc_A1"]
+    # B: points 300 + 2040; veteran: Mario 1000 (capped) + Fox 1000 = 2000
+    assert tot["acc_B2"]["points"] == 2340 and tot["acc_B2"]["veteran"] == 2000 and tot["acc_B2"]["fighter"] == "mario", tot["acc_B2"]
+    assert [r["id"] for r in out["total"]] == ["acc_B2", "acc_A1", "acc_C3"] and out["players"] == 3
+    assert tot["acc_A1"]["fighter"] == "mario" and "avatar" not in tot["acc_A1"]
+    assert all(set(r) <= {"pos", "id", "name", "avatar", "points", "veteran", "total", "fighter"} for r in out["total"])
+    assert not any(k in json.dumps(out) for k in ("level", "tier", "rank")), "points only: no levels, tiers or ranks"
+
+    # files: a lobby without /mastery.json is skipped, nothing answering leaves the file alone, no rewrite when unchanged
+    docs = {"http://a/mastery.json": eu, "http://b/mastery.json": na, "http://a/status.json": {"online": 3, "rooms": 2, "x": 1}}
+    fetcher = lambda u: docs.get(u)  # noqa: E731 - "http://c/..." is a lobby without the new endpoints
     with tempfile.TemporaryDirectory() as d:
-        path = os.path.join(d, "lb.json")
-        empty = {"updated": None, "ranked": 0, "players": [], "fighters": {}}
-        with open(path, "w") as f:
-            json.dump(empty, f)
-        assert run(["http://c/l.json"], path, fetcher, None) == 0
-        with open(path) as f:
-            assert json.load(f) == empty, "must not change when no lobby answers"
-        assert run(urls, path, fetcher, None) == 0
-        with open(path) as f:
+        mpath, spath = os.path.join(d, "mastery.json"), os.path.join(d, "status.json")
+        gpath, apath = os.path.join(d, "leaderboard.json"), os.path.join(d, "gsp_archive.json")
+        rpath = os.path.join(d, "mastery_regions.json")
+        gsp = {"updated": "2026-11-19T16:02:43Z", "ranked": 1, "players": [{"id": "9d74203bd22b4243", "rank": 1, "gsp": 1725}], "fighters": {}}
+        write_json(gpath, gsp)
+        assert run(["http://c/"], mpath, fetcher, spath, gpath, apath, rpath) == 0
+        assert not os.path.exists(mpath), "no lobby with /mastery.json: no file"
+        assert read_json(spath)["up"] is False
+        arch = read_json(apath)
+        assert arch["players"] == gsp["players"] and arch["frozen"], "the GSP list is archived once"
+        write_json(gpath, {"updated": "later", "ranked": 0, "players": [], "fighters": {}})
+        assert run(["http://a/leaderboard.json", "http://c/", "http://b/"], mpath, fetcher, spath, gpath, apath, rpath) == 0
+        assert read_json(apath) == arch, "the archive is never overwritten"
+        assert read_json(gpath)["updated"] == "later", "leaderboard.json is not rewritten any more"
+        with open(mpath, encoding="utf-8") as f:
             first_text = f.read()
-        first = json.loads(first_text)
-        assert first["ranked"] == 2 and first["updated"]
-        assert run(urls, path, fetcher, None) == 0
-        with open(path) as f:
+        assert json.loads(first_text)["players"] == 3
+        st = read_json(spath)
+        assert st["up"] is True and st["online"] == 3 and st["rooms"] == 2 and "x" not in st and "ranked" not in st, st
+        assert run(["http://a/", "http://c/", "http://b/"], mpath, fetcher, spath, gpath, apath, rpath) == 0
+        with open(mpath, encoding="utf-8") as f:
             assert f.read() == first_text, "unchanged data must not rewrite"
-        spath = os.path.join(d, "status.json")
-        st = {"http://a/status.json": {"online": 3, "rooms": 2, "arenas": 1, "open_rooms": 1, "playing": 2, "x": 1}}
-        sf = lambda u: st.get(u) or docs.get(u)  # noqa: E731
-        assert run(["http://a/l.json"], os.path.join(d, "l2.json"), sf, spath) == 0
-        with open(spath) as f:
-            got = json.load(f)
-        assert got["up"] is True and got["online"] == 3 and got["rooms"] == 2 and got["ranked"] == 2 and "x" not in got, got
-        assert "matches" not in got, "no count from a lobby that has none"
-        # a lobby that does not serve /status.json yet: file left alone
-        assert run(["http://b/l.json"], os.path.join(d, "l3.json"), fetcher, spath) == 0
-        with open(spath) as f:
-            assert json.load(f)["online"] == 3
-        # nothing answers: marked down
-        assert run(["http://c/l.json"], os.path.join(d, "l4.json"), fetcher, spath) == 0
-        with open(spath) as f:
-            assert json.load(f)["up"] is False
+        assert run(["http://c/"], mpath, fetcher, spath, gpath, apath, rpath) == 0
+        with open(mpath, encoding="utf-8") as f:
+            assert f.read() == first_text, "must not change when no lobby answers"
+        # a region that is down keeps its last points in the sum; status.json left alone without /status.json
+        write_json(spath, {"updated": "s", "up": True, "online": 9})
+        regions_text = open(rpath, encoding="utf-8").read()
+        assert run(["http://b/"], mpath, fetcher, spath, gpath, apath, rpath) == 0
+        assert read_json(spath)["online"] == 9
+        with open(mpath, encoding="utf-8") as f:
+            assert f.read() == first_text, "EU down: its last points still count"
+        assert open(rpath, encoding="utf-8").read() == regions_text, "the region cache is rewritten only on a change"
+        assert sorted(read_json(rpath)) == ["eu", "na-east"] and "updated" not in read_json(rpath)["eu"]
+        assert run(["http://b/"], os.path.join(d, "m2.json"), fetcher, None, gpath, apath, None) == 0
+        assert read_json(os.path.join(d, "m2.json"))["players"] == 2, "without the cache: only the regions that answered"
     global HEARTBEAT_S
     HEARTBEAT_S = 600
     m = build_status([{"online": 1, "matches": {"total": 120, "today": 7, "by_mode": {"quickplay": 100, "arena": 15, "room": 5},
                                                 "estimated": 40, "since": "2026-11-18"}},
-                      {"online": 2, "matches": {"total": "x"}}, {"online": 0}], 0, "t")
+                      {"online": 2, "matches": {"total": "x"}}, {"online": 0}], "t")
     assert m["matches"] == {"total": 120, "today": 7, "by_mode": {"quickplay": 100, "arena": 15, "room": 5}}, m
     assert same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:05:00Z"})
     assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:11:00Z"})
     assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 2, "updated": "2026-01-01T00:00:01Z"})
     HEARTBEAT_S = 0
+    assert lobby_file("http://h:39421/leaderboard.json", "mastery.json") == "http://h:39421/mastery.json"
+    assert lobby_file("http://h:39421/", "mastery.json") == "http://h:39421/mastery.json"
+    assert AVATAR_RE.match("https://cdn.discordapp.com/embed/avatars/3.png")
+    assert not AVATAR_RE.match("https://cdn.discordapp.com.evil.example/embed/avatars/1.png")
     log("selftest ok")
     return 0
 
