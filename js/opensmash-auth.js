@@ -210,6 +210,9 @@
   /* Mastery points (Global Mastery Points, GMP) live in the shared project: the one copy that sums every region (EU, NA East)
      and SSBU Arena, so this site and Arena's show the same numbers. */
   var FIGHTER_RE = /^[a-z0-9_]{1,32}$/;
+  /* A fighter as the database returns it: normally a key ("jack"), but a name ("Joker", "Pyra / Mythra") is accepted too
+     (js/fighters.js resolves both); anything else is dropped. Shown with textContent only. */
+  var FIGHTER_IN_RE = /^[A-Za-z0-9_ .&\/'\u00e9-]{1,40}$/;
   function num(v) { var x = Number(v); return v !== null && v !== "" && typeof v !== "boolean" && isFinite(x) && x >= 0 ? Math.floor(x) : 0; }
   function numOrNull(v) { return v == null || v === "" ? null : num(v); }
   function rpcError(r) {
@@ -233,7 +236,7 @@
           if (!x || typeof x !== "object" || typeof x.id !== "string" || !/^[0-9a-f]{16}$/.test(x.id) || !(num(x.pos) > 0)) return;
           if (count === null && x.total_count != null) count = num(x.total_count);
           out.push({ pos: num(x.pos), id: x.id, name: typeof x.name === "string" && x.name.trim() ? x.name.trim().slice(0, 64) : null,
-                     tag: x.tag == null ? null : num(x.tag), main_fighter: typeof x.main_fighter === "string" && FIGHTER_RE.test(x.main_fighter) ? x.main_fighter : null,
+                     tag: x.tag == null ? null : num(x.tag), main_fighter: typeof x.main_fighter === "string" && FIGHTER_IN_RE.test(x.main_fighter) ? x.main_fighter : null,
                      total: num(x.total), games: num(x.games) });
         });
         return { rows: out, count: count };
@@ -250,7 +253,7 @@
       if (!r.ok) throw rpcError(r);
       return r.json().then(function (rows) {
         if (!Array.isArray(rows)) throw new Error("The account service sent an unexpected answer.");
-        return rows.filter(function (x) { return x && typeof x.fighter === "string" && FIGHTER_RE.test(x.fighter); }).map(function (x) {
+        return rows.filter(function (x) { return x && typeof x.fighter === "string" && FIGHTER_IN_RE.test(x.fighter); }).map(function (x) {
           var points = num(x.points), veteran = num(x.veteran);
           return { fighter: x.fighter, points: points, veteran: veteran, total: x.total == null ? points + veteran : num(x.total), games: num(x.games),
                    wins: num(x.wins), updated_at: typeof x.updated_at === "string" ? x.updated_at : null,
@@ -270,7 +273,7 @@
         var x = Array.isArray(d) ? d[0] : d;
         if (!x || typeof x !== "object" || !(num(x.pos) > 0)) return null;
         return { pos: num(x.pos), id: typeof x.id === "string" ? x.id : null, total: num(x.total), total_count: numOrNull(x.total_count),
-                 main_fighter: typeof x.main_fighter === "string" && FIGHTER_RE.test(x.main_fighter) ? x.main_fighter : null };
+                 main_fighter: typeof x.main_fighter === "string" && FIGHTER_IN_RE.test(x.main_fighter) ? x.main_fighter : null };
       });
     });
   }

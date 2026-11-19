@@ -93,6 +93,7 @@ If the project cannot be reached the pages say so; there is no fallback to the l
   publishable key are public and are constants at the top of `js/opensmash-auth.js`. If the site moves, the registered
   redirect URI and `SITE_URL` there change together (ask the OpenSmash / SSBU Arena team). There is no client secret.
 - Test (no network, fake `fetch` and storage): `node .github/opensmash-auth.test.cjs`.
+- Fighter keys, names and aliases ("joker", "Pyra / Mythra", "PT" ...) -> name and icon: `node .github/fighters.test.cjs`.
 
 ## GitHub Pages
 

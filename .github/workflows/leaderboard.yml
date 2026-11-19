@@ -41,6 +41,8 @@ jobs:
         run: python .github/scripts/leaderboard.py --selftest
       - name: Sign-in self-test (offline)
         run: node .github/opensmash-auth.test.cjs
+      - name: Fighter names and icons self-test (offline)
+        run: node .github/fighters.test.cjs
       - name: Snapshot loop (5 h 50 m)
         env:
           DATA_DIR: ${{ github.workspace }}/data

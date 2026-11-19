@@ -27,9 +27,41 @@
     miiswordsman: "Mii Swordfighter", miigunner: "Mii Gunner"
   };
   var has = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
+
+  /* Any spelling -> the key above: the game keys (jack, pzenigame, popo ...), and names and common aliases in any case,
+     spacing or punctuation ("joker", "Pyra / Mythra", "PT", "ice climbers", "mii fighter" ...). Compared squashed: lower
+     case, letters and digits only. */
+  var squash = function (v) { return String(v == null ? "" : v).toLowerCase().replace(/[^a-z0-9]+/g, ""); };
+  var ALIAS = {};
+  Object.keys(N).forEach(function (k) { ALIAS[squash(k)] = k; });
+  Object.keys(N).forEach(function (k) { if (!has(ALIAS, squash(N[k]))) ALIAS[squash(N[k])] = k; });
+  ("joker:jack hero:brave banjo:buddy banjokazooie:buddy terry:dolly terrybogard:dolly byleth:master minmin:tantan steve:pickel " +
+   "alex:pickel sephiroth:edge pyra:eflame mythra:elight pyramythra:element aegis:element kazuya:demon sora:trail " +
+   "pt:ptrainer pokemontrainer:ptrainer pokmontrainer:ptrainer trainer:ptrainer squirtle:pzenigame ivysaur:pfushigisou charizard:plizardon " +
+   "iceclimbers:ice_climber iceclimber:ice_climber ics:ice_climber icies:ice_climber " +
+   "mii:miifighter miifighter:miifighter miifighters:miifighter brawler:miifighter miibrawler:miifighter " +
+   "miisword:miiswordsman miiswordfighter:miiswordsman swordfighter:miiswordsman miigunner:miigunner gunner:miigunner " +
+   "dk:donkey donkeykong:donkey diddykong:diddy kingkrool:krool krool:krool dedede:dedede kingdedede:dedede " +
+   "falcon:captain captainfalcon:captain cf:captain jigglypuff:purin puff:purin bowser:koopa bowserjr:koopajr " +
+   "drmario:mariod doc:mariod younglink:younglink yink:younglink toonlink:toonlink tink:toonlink ganondorf:ganon ganon:ganon " +
+   "gameandwatch:gamewatch mrgameandwatch:gamewatch gnw:gamewatch gw:gamewatch metaknight:metaknight mk:metaknight " +
+   "darkpit:pitb darksamus:samusd zss:szerosuit zerosuitsamus:szerosuit olimar:pikmin alph:pikmin rob:robot " +
+   "villager:murabito megaman:rockman wiifittrainer:wiifit wft:wiifit rosalina:rosetta rosalinaluma:rosetta luma:rosetta " +
+   "littlemac:littlemac mac:littlemac greninja:gekkouga pacman:pacman robin:reflet corrin:kamui isabelle:shizue " +
+   "incineroar:gaogaen piranhaplant:packun plant:packun duckhunt:duckhunt dh:duckhunt rob:robot " +
+   "drmario:mariod mrgamewatch:gamewatch belmont:simon").split(" ").forEach(function (pair) {
+    var kv = pair.split(":");
+    ALIAS[squash(kv[0])] = kv[1];
+  });
+  /* The key of a fighter given any spelling, or null for an unknown one. */
+  window.OSU_FIGHTER_KEY = function (v) {
+    var q = squash(v);
+    return q && has(ALIAS, q) ? ALIAS[q] : null;
+  };
+  /* A fighter's display name from any spelling; an unknown one shows as given. */
   window.OSU_FIGHTER = function (key) {
-    key = String(key == null ? "" : key);
-    return has(N, key) ? N[key] : key;
+    var k = window.OSU_FIGHTER_KEY(key);
+    return k ? N[k] : String(key == null ? "" : key);
   };
 
   /* Every fighter once, by the key the points are stored under (the keys SSBU Arena's database maps names to): the
@@ -54,7 +86,7 @@
   var COSTUME = { ridley: 5 };
   /* {src, src2x} of a fighter key, or null. */
   window.OSU_FIGHTER_ICON = function (key) {
-    key = String(key == null ? "" : key);
+    key = window.OSU_FIGHTER_KEY(key) || "";
     var k = has(ICON_KEY, key) ? ICON_KEY[key] : key;
     if (ICONS.indexOf(k) < 0) return null;
     var n = has(COSTUME, k) ? COSTUME[k] : 1;
