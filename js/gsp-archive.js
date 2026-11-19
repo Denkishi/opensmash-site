@@ -1,4 +1,5 @@
-/* Leaderboard page: renders ../leaderboard.json (written by .github/scripts/leaderboard.py). */
+/* GSP archive page (leaderboard/gsp/): the GSP leaderboard as it was when it was frozen (gsp_archive.json on the `data`
+   branch, copied once by .github/scripts/leaderboard.py). Read only: GSP is no longer updated here. */
 document.addEventListener("DOMContentLoaded", function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
@@ -58,15 +59,15 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  OSU.loadBoard().then(function (d) {
+  OSU.loadGspArchive("../../").then(function (d) {
     data = d;
     if (!d.players.length) {
       $("note").classList.add("hidden");
-      status.textContent = "No ranked players yet. The leaderboard fills in once players have played online and the first update has run.";
+      status.textContent = "The GSP archive is empty.";
       return;
     }
-    var t = d.updated && OSU.fmtTime(d.updated);
-    if (t) $("updated").textContent = "Updated " + t;
+    var frozen = d.frozen || d.updated, t = frozen && new Date(frozen);
+    if (t && !isNaN(t)) $("updated").textContent = (d.frozen ? "Frozen on " : "Last update ") + t.toLocaleDateString(undefined, { dateStyle: "long" });
     Object.keys(d.fighters).sort(function (a, b) {
       return d.fighters[a].name.localeCompare(d.fighters[b].name);
     }).forEach(function (k) {
@@ -79,6 +80,6 @@ document.addEventListener("DOMContentLoaded", function () {
     content.classList.remove("hidden");
     showOverall();
   }).catch(function () {
-    status.textContent = "The leaderboard is not available right now. Try again in a few minutes.";
+    status.textContent = "The GSP archive is not available right now. Try again in a few minutes.";
   });
 });

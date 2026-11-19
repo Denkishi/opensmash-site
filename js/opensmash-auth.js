@@ -164,23 +164,36 @@
     return refresh().then(function (n) { return n.access; }, function (e) { if (e.fatal) return null; throw e; });
   }
 
-  function fetchProfile() {
-    function once(t, sub) {
-      return window.fetch(PROFILES + "?select=id,username,tag,elo,created_at&id=eq." + encodeURIComponent(sub), {
-        headers: { "apikey": PUBLISHABLE_KEY, "Authorization": "Bearer " + t }
-      });
+  /* A request to the shared project as the signed-in player (publishable key + the access token). After a 401: one
+     refresh, one retry; if still refused the session ends. Resolves to the Response, or null when signed out. */
+  function authed(url, init) {
+    init = init || {};
+    function once(t) {
+      var h = { "apikey": PUBLISHABLE_KEY, "Authorization": "Bearer " + t };
+      if (init.json) h["Content-Type"] = "application/json";
+      var o = { headers: h };
+      if (init.method) o.method = init.method;
+      if (init.json) o.body = JSON.stringify(init.json);
+      return window.fetch(url, o);
     }
     return token().then(function (t) {
-      var s = get();
-      if (!t || !s) return null;
-      return once(t, s.sub).then(function (r) {
+      if (!t || !get()) return null;
+      return once(t).then(function (r) {
         if (r.status !== 401) return r;
         var cur = get(); if (cur) { cur.exp = 0; put(cur); } // force one refresh, then retry once
-        return refresh().then(function (n) { return once(n.access, n.sub); }, function (e) { if (e.fatal) return null; throw e; });
+        return refresh().then(function (n) { return once(n.access); }, function (e) { if (e.fatal) return null; throw e; });
       });
     }).then(function (r) {
+      if (r && r.status === 401) { sdel("localStorage", KEY); changed(); return null; }
+      return r;
+    });
+  }
+
+  function fetchProfile() {
+    var s0 = get();
+    if (!s0) return Promise.resolve(null);
+    return authed(PROFILES + "?select=id,username,tag,elo,created_at&id=eq." + encodeURIComponent(s0.sub)).then(function (r) {
       if (!r) return null;
-      if (r.status === 401) { sdel("localStorage", KEY); changed(); return null; }
       if (!r.ok) throw new Error("The account service answered HTTP " + r.status + ".");
       return r.json().then(function (rows) {
         var p = Array.isArray(rows) && rows[0];
@@ -190,6 +203,25 @@
         if (!s) return null; // signed out meanwhile
         s.profile = p; put(s); changed();
         return p;
+      });
+    });
+  }
+
+  /* The signed-in player's OpenSmash mastery points per fighter, summed over the regions (public.my_opensmash_mastery()
+     on the shared project; OPENSMASH_MASTERY_SPEC section 4). Resolves to [{fighter, points, veteran, total, games}]
+     sorted by total, or null when signed out. Rejects with .missing = true while the function is not deployed. */
+  function myMastery() {
+    var n = function (v) { var x = Number(v); return isFinite(x) && x >= 0 ? Math.floor(x) : 0; };
+    return authed(PROJECT + "/rest/v1/rpc/my_opensmash_mastery", { method: "POST", json: {} }).then(function (r) {
+      if (!r) return null;
+      if (r.status === 404) { var e = new Error("Mastery points are not available yet."); e.missing = true; throw e; }
+      if (!r.ok) throw new Error("The account service answered HTTP " + r.status + ".");
+      return r.json().then(function (rows) {
+        if (!Array.isArray(rows)) throw new Error("The account service sent an unexpected answer.");
+        return rows.filter(function (x) { return x && typeof x.fighter === "string" && /^[a-z0-9_]{1,32}$/.test(x.fighter); }).map(function (x) {
+          var points = n(x.points), veteran = n(x.veteran);
+          return { fighter: x.fighter, points: points, veteran: veteran, total: x.total == null ? points + veteran : n(x.total), games: n(x.games) };
+        }).sort(function (a, b) { return b.total - a.total || a.fighter.localeCompare(b.fighter); });
       });
     });
   }
@@ -218,7 +250,7 @@
   window.OpenSmashAuth = {
     KEY: KEY, manageUrl: MANAGE_URL,
     configured: configured, startSignIn: startSignIn, finishSignIn: finishSignIn,
-    signedIn: signedIn, get: get, profile: profile, token: token, fetchProfile: fetchProfile,
+    signedIn: signedIn, get: get, profile: profile, token: token, fetchProfile: fetchProfile, myMastery: myMastery,
     displayName: displayName, signOut: signOut, signInLink: signInLink, signUpLink: signUpLink
   };
 })();

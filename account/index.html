@@ -12,13 +12,15 @@
 <link rel="icon" href="../assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="../css/style.css?v=2">
-<link rel="stylesheet" href="../css/pages.css">
+<link rel="stylesheet" href="../css/pages.css?v=2">
 <script src="../config.js"></script>
 <script src="../js/snapshot.js?v=4" defer></script>
-<script src="../js/page.js?v=3" defer></script>
-<script src="../js/opensmash-auth.js?v=1" defer></script>
+<script src="../js/page.js?v=4" defer></script>
+<script src="../js/fighters.js?v=1" defer></script>
+<script src="../js/opensmash-auth.js?v=2" defer></script>
 <script src="../js/nav-login.js?v=5" defer></script>
 <script src="../js/opensmash-account-ui.js?v=1" defer></script>
+<script src="../js/account-mastery.js?v=1" defer></script>
 </head>
 <body data-osa-next="account/">
 <a class="skip" href="#main">Skip to content</a>
@@ -31,7 +33,8 @@
   <nav id="nav-links" class="nav-links" aria-label="Sections">
     <a href="../#install">Install</a>
     <a href="../#online">Online</a>
-    <a href="../leaderboard/">Leaderboard</a>
+    <a href="../leaderboard/">Mastery</a>
+    <a href="https://www.ssbuarena.com/" rel="noopener" title="SSBU Arena: ranked 1v1, same account">Competitive <span class="nav-sub">(SSBU Arena)</span></a>
     <a class="nav-cta" id="nav-login" href="../account/" aria-current="page">Register / Log in</a>
     <a class="nav-cta" data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener">GitHub</a>
   </nav>
@@ -54,6 +57,22 @@
         <button id="osa-signout" class="btn btn-outline" type="button"><span>Sign out</span></button></p>
         <p class="muted small">Sign out only forgets you in this browser. You stay signed in on account.opensmashultimate.com; use Manage account to sign out everywhere.</p>
       </div>
+    </div>
+
+    <div id="my-mastery" class="panel hidden" aria-live="polite">
+      <h2>Your mastery</h2>
+      <p class="muted">Points per fighter from your online matches, summed over the regions. Engagement points, not a skill ranking: ranked play lives in <a href="https://www.ssbuarena.com/" rel="noopener">SSBU Arena</a>.</p>
+      <div id="my-status" class="notice" role="status">Loading&hellip;</div>
+      <div id="my-content" class="hidden">
+        <p class="my-total"><span id="my-total"></span><small>mastery points</small></p>
+        <div class="table-wrap">
+          <table class="board">
+            <thead><tr><th>Fighter</th><th class="num">Points</th><th class="num">Matches</th></tr></thead>
+            <tbody id="my-rows"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="muted small"><a href="../leaderboard/">All players' mastery</a></p>
     </div>
 
   </div>

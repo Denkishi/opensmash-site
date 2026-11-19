@@ -1,4 +1,4 @@
-/* Home page: live lobby counts (status.json) and the top of the leaderboard (leaderboard.json). Both are snapshots
+/* Home page: live lobby counts (status.json) and the top 10 mastery points (mastery.json). Both are snapshots
    written every few minutes by .github/workflows/leaderboard.yml to the `data` branch (the lobby is plain HTTP; this
    page is HTTPS); js/snapshot.js loads them. The "Updated x min ago" labels tick every 30 s between fetches. */
 (function () {
@@ -25,9 +25,9 @@
     lastStatus = s;
     showMatches(s);
     var pill = $("pill"), txt = $("pill-text"), upd = $("upd");
-    var keys = ["online", "rooms", "arenas", "ranked"];
+    var keys = ["online", "rooms", "arenas"];
     function dashes() {
-      keys.forEach(function (k) { $("t-" + k).textContent = k === "ranked" && board && typeof board.ranked === "number" ? String(board.ranked) : "-"; });
+      keys.forEach(function (k) { $("t-" + k).textContent = "-"; });
     }
     if (!s || typeof s !== "object" || (s.up !== false && typeof s.online !== "number")) {
       dashes();
@@ -49,7 +49,7 @@
 
   function cell(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; e.textContent = text; return e; }
 
-  /* The Discord profile picture the lobby lists (same check as the full leaderboard page), else the initial. */
+  /* A Discord profile picture if the snapshot lists one (same check as the mastery page), else the initial. */
   var AVATAR_RE = /^https:\/\/cdn\.discordapp\.com\/(avatars\/[0-9]+\/(a_)?[0-9a-f]{32}\.png\?size=64|embed\/avatars\/[0-5]\.png)$/;
   function initial(name) { return cell("span", "initial", (name || "A").charAt(0).toUpperCase()); }
   function avatar(p) {
@@ -61,34 +61,27 @@
     img.src = p.avatar;
     return img;
   }
-  /* A per-fighter top entry carries only the player's id: name and picture come from the overall list. */
-  function byId(id) {
-    var ps = (board && board.players) || [];
-    for (var i = 0; i < ps.length; i++) if (ps[i].id === id) return ps[i];
-    return null;
+  function pts(p) {
+    var t = typeof p.total === "number" ? p.total : (Number(p.points) || 0) + (Number(p.veteran) || 0);
+    return Math.floor(t).toLocaleString("en-US");
   }
-
-  function fighterName(kind) {
-    var f = board && board.fighters && board.fighters[kind];
-    return (f && f.name) || "Fighter " + kind;
-  }
-  function render(kind) {
+  /* Points only (engagement, not skill): no levels, no tiers. */
+  function render(key) {
     var body = $("rows"), head = $("head"), rows = [];
     body.textContent = ""; head.textContent = "";
-    if (!board || !board.players || !board.players.length) {
+    if (!board || !board.total.length) {
       $("table-wrap").hidden = true; $("empty").hidden = false; return;
     }
     $("empty").hidden = true; $("table-wrap").hidden = false;
-    if (kind) {
-      ["#", "Player", "GSP"].forEach(function (c, i) { head.appendChild(cell("th", i === 2 ? "num" : "", c)); });
-      rows = ((board.fighters[kind] || {}).top || []).slice(0, TOP).map(function (p) { var q = byId(p.id) || p; return [p.rank, q.name, null, p.gsp, q]; });
+    ["#", "Player", "Points"].forEach(function (c, i) { head.appendChild(cell("th", i === 2 ? "num" : "", c)); });
+    if (key && Array.isArray(board.fighters[key])) {
+      rows = board.fighters[key].slice(0, TOP).map(function (p, i) { return [p.pos || i + 1, p.name, null, pts(p), p]; });
     } else {
-      ["#", "Player", "GSP"].forEach(function (c, i) { head.appendChild(cell("th", i === 2 ? "num" : "", c)); });
-      rows = board.players.slice(0, TOP).map(function (p) { return [p.rank, p.name, p.fighter != null ? fighterName(p.fighter) : "-", p.gsp, p]; });
+      rows = board.total.slice(0, TOP).map(function (p, i) { return [p.pos || i + 1, p.name, p.fighter ? OSU_FIGHTER(p.fighter) : null, pts(p), p]; });
     }
     rows.forEach(function (r) {
       var tr = document.createElement("tr");
-      tr.appendChild(cell("td", "pos", "#" + r[0]));
+      tr.appendChild(cell("td", "pos", String(r[0])));
       var pc = cell("td", ""), box = cell("div", "player", "");
       box.appendChild(avatar(r[4]));
       var who = cell("span", "", r[1] || "Anonymous");
@@ -103,10 +96,11 @@
   function fillSelect() {
     var sel = $("fighter"), keep = sel.value;
     while (sel.options.length > 1) sel.remove(1);
-    Object.keys((board && board.fighters) || {}).sort(function (a, b) {
-      return board.fighters[a].name.localeCompare(board.fighters[b].name);
+    var f = (board && board.fighters) || {};
+    Object.keys(f).filter(function (k) { return Array.isArray(f[k]) && f[k].length; }).sort(function (a, b) {
+      return OSU_FIGHTER(a).localeCompare(OSU_FIGHTER(b));
     }).forEach(function (k) {
-      var o = document.createElement("option"); o.value = k; o.textContent = board.fighters[k].name; sel.appendChild(o);
+      var o = document.createElement("option"); o.value = k; o.textContent = OSU_FIGHTER(k); sel.appendChild(o);
     });
     sel.value = keep;
     if (sel.value !== keep) sel.value = "";
@@ -119,15 +113,15 @@
 
   function refresh() {
     OSUData.load("status.json").then(showStatus).catch(function () { showStatus(null); });
-    OSUData.load("leaderboard.json").then(function (d) {
-      if (!d || !Array.isArray(d.players)) throw new Error("bad file");
-      d.fighters = d.fighters || {};
+    OSUData.load("mastery.json").then(function (d) {
+      if (!d || !Array.isArray(d.total)) throw new Error("bad file");
+      if (!d.fighters || typeof d.fighters !== "object" || Array.isArray(d.fighters)) d.fighters = {};
       board = d;
       fillSelect();
       render($("fighter").value);
-      if ($("t-ranked").textContent === "-" && typeof d.ranked === "number") $("t-ranked").textContent = String(d.ranked);
+      $("t-mastery").textContent = typeof d.players === "number" ? String(d.players) : "-";
       tickBoardAge();
-    }).catch(function () { board = null; render(""); });
+    }).catch(function () { board = null; $("t-mastery").textContent = "-"; render(""); tickBoardAge(); });
   }
 
   document.addEventListener("DOMContentLoaded", function () {

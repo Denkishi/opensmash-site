@@ -55,3 +55,10 @@ table.board tbody tr:nth-child(-n+3) td.pos { color: var(--red); }
 .lb .player { display: flex; align-items: center; gap: 10px; }
 .lb .avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--bg-3); flex: none; }
 .lb .initial { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-3); color: var(--fg-dim); display: grid; place-items: center; font-weight: 800; font-size: 13px; flex: none; }
+.lb-note { margin: 0 0 10px; font-size: 13px; color: var(--fg-mute); }
+.lb-note a { color: var(--fg-dim); }
+/* The nav link "Competitive (SSBU Arena)": in the full-screen phone menu the "(SSBU Arena)" goes on a small second line. */
+@media (max-width: 860px) { .nav-links a .nav-sub { display: block; font-family: var(--sans); font-size: 14px; font-weight: 700; letter-spacing: .14em; text-align: center; color: var(--fg-dim); } }
+@media (min-width: 861px) { .nav-links a { white-space: nowrap; } }
+@media (min-width: 861px) and (max-width: 1340px) { .nav-links a .nav-sub { display: none; } .nav-links a { padding-left: 8px; padding-right: 8px; letter-spacing: .08em; } .nav-links .nav-cta { padding-left: 14px; padding-right: 14px; } }
+@media (min-width: 861px) and (max-width: 1000px) { .nav-links a[data-link=discord] { display: none; } } /* the home nav has one link more; Discord is also in the hero and footer */
