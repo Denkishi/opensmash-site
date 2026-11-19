@@ -76,3 +76,10 @@ table.board tbody tr:nth-child(-n+3) td.pos { color: var(--red); }
 @media (max-width: 860px) { .lb, .status { padding: 24px 18px 20px; } .lb .board-head h3 { font-size: 28px; } }
 @media (min-width: 861px) { .nav-links a { white-space: nowrap; } }
 @media (min-width: 861px) and (max-width: 1100px) { .nav-links a { padding-left: 8px; padding-right: 8px; letter-spacing: .08em; } .nav-links .nav-cta { padding-left: 14px; padding-right: 14px; } }
+/* "Online now": Total / EU / NA (js/home.js). */
+.region-switch { display: inline-flex; margin: -8px 0 18px; border: 1px solid var(--line); align-self: flex-start; }
+.region-switch button { background: transparent; color: var(--fg-dim); border: 0; border-left: 1px solid var(--line); padding: 8px 16px; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; transition: background .2s, color .2s; }
+.region-switch button:first-child { border-left: 0; }
+.region-switch button:hover { color: var(--fg); }
+.region-switch button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.region-switch button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }

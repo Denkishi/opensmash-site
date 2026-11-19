@@ -14,7 +14,7 @@ GPL-3.0 like the project. Not affiliated with Nintendo.
 | `config.js` | links: repository, Discord |
 | `js/opensmash-auth.js`, `js/opensmash-account-ui.js`, `auth/callback/` | "Sign in with your OpenSmash account" (see below) |
 | `leaderboard/`, `js/mastery.js` | the Mastery page: Global Mastery Points (GMP), top 100 overall and per fighter (# / fighter icon / player / GMP), drawn 50 rows at a time as you scroll; signed in, the player's own GMP, rank and top fighters first |
-| `competitive/` | the Competitive page: SSBU Arena's ranked (same account), its `/embed/leaderboard` iframe, download and website buttons |
+| `competitive/` | the Competitive page: one line on SSBU Arena's ranked (same account, linked) and its `/embed/leaderboard` iframe at full width |
 | `leaderboard/gsp/`, `js/gsp-archive.js` | the GSP archive: the frozen GSP leaderboard, read only (no longer linked from the other pages) |
 | `js/fighters.js` | fighter names and icons: Max_Hamm's stock icons loaded from ssbuarena.com (no image in this repository), credited under each table; the name's initial if an icon is missing |
 | `account/`, `js/account-mastery.js`, `css/pages.css`, `js/page.js` | the account page (shared OpenSmash account) with the player's own mastery |
@@ -54,6 +54,12 @@ by hand: Actions > Update mastery and status > Run workflow.
 - `status.json`: `{"updated","up","online","rooms","arenas","open_rooms","playing"}`. Counts only. Needs the lobby
   built with `/status.json` (OpenSmash-Ultimate PR #370); until it is redeployed the file is absent and the page shows
   "Live counts coming soon". If the lobby does not answer at all, `up` becomes `false` and the page says so.
+  The top-level counts are summed over every lobby; `"regions": {"eu": {...}, "na-east": {...}}` has the official lobbies'
+  own counts (`"up": false` for one that did not answer), by host name (`REGION_OF_HOST` in `leaderboard.py`). The home's
+  "Online now" card shows Total (the two regions summed) or one region. The lobbies send `Access-Control-Allow-Origin: *`
+  but serve plain HTTP only, which an HTTPS page may not read (mixed content), so the page reads this snapshot; once they
+  have HTTPS addresses, `LOBBY_HTTPS` in `config.js` (`{"eu": "https://...", "na-east": "https://..."}`) makes the page
+  read them live first.
 - The lobby list is at the top of `leaderboard.py` (or the `LOBBIES` environment variable, comma-separated).
 - Offline test: `python .github/scripts/leaderboard.py --selftest`.
 

@@ -85,9 +85,9 @@ table.mastery-board td { vertical-align: middle; }
   .me-grid { grid-template-columns: 1fr; gap: 16px; }
 }
 /* Competitive page: SSBU Arena's ranked leaderboard in an iframe. */
-.competitive { margin-top: 40px; padding-top: 8px; border-top: 1px solid var(--line); }
-.competitive h2 span { color: var(--red); }
-.competitive .muted { margin: 10px 0 0; }
+.page a.arena-link { color: var(--fg); text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 3px; }
+.page a.arena-link:hover { color: var(--red); }
+.embed-frame.embed-full { max-width: none; }
 /* The embed sends no size message (checked 19/11/2026: no postMessage to the parent), so the height is fixed: room for
    its top 10 without a tall empty box while ranked is still empty (its empty state is ~200 px); longer content scrolls. */
 .embed-frame { border: 1px solid var(--line); background: var(--bg-2); max-width: 760px; }

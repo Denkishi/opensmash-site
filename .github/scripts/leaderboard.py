@@ -35,6 +35,10 @@ LOBBIES = [
     "http://opensmash-lobby.duckdns.org:39421/",
 ]
 STATUS_KEYS = ("online", "rooms", "arenas", "open_rooms", "playing")
+# The region of each official lobby, by host name (its /status.json does not name one; a "region" in it wins). status.json
+# lists their counts apart under "regions" for the home page's Total / EU / NA switch; a lobby of no region (the v0.4.x one)
+# counts only in the top-level sums.
+REGION_OF_HOST = {"eu.lobby.opensmashultimate.com": "eu", "na.lobby.opensmashultimate.com": "na-east"}
 MATCH_MODES = ("quickplay", "arena", "room")
 _ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 # DATA_DIR: where the snapshots are written (the workflow checks the `data` branch out there). Default: repo root.
@@ -259,9 +263,28 @@ def write_if_changed(path, new):
     return True
 
 
-def build_status(docs, updated):
-    """Sum the lobbies' aggregate counts. docs: parsed /status.json documents (counts only)."""
-    out = {"updated": updated, "up": True}
+def region_of(url, doc=None):
+    """The region of a lobby: its document's "region", else its host's (REGION_OF_HOST), else None."""
+    r = doc.get("region") if isinstance(doc, dict) else None
+    if isinstance(r, str) and REGION_RE.match(r.lower()):
+        return r.lower()
+    host = re.sub(r"^[a-z]+://", "", str(url)).split("/", 1)[0].rsplit(":", 1)[0].lower()
+    return REGION_OF_HOST.get(host)
+
+
+def build_status(docs, updated, by_region=None):
+    """Sum the lobbies' aggregate counts. docs: parsed /status.json documents (counts only). by_region: {region: document,
+    or None when that region's lobby did not answer} -> "regions": {region: counts (+ "up")}, sorted by region."""
+    out = _counts(docs)
+    out = dict({"updated": updated, "up": True}, **out)
+    if by_region:
+        out["regions"] = {r: (dict({"up": True}, **_counts([d])) if isinstance(d, dict) else {"up": False})
+                          for r, d in sorted(by_region.items())}
+    return out
+
+
+def _counts(docs):
+    out = {}
     for k in STATUS_KEYS:
         out[k] = sum(n for n in (_int(d.get(k)) for d in docs if isinstance(d, dict)) if n is not None)
     # (online matches played, from lobbies that count them; left out until one does)
@@ -278,9 +301,17 @@ def build_status(docs, updated):
 def run_status(urls, status_path, fetcher, mastery_up):
     """status.json: live counts. A lobby without /status.json is skipped; when no lobby answers at all (neither
     /status.json nor /mastery.json) the file says {"up": false}."""
-    docs = [d for d in (fetcher(lobby_file(u, "status.json")) for u in urls) if isinstance(d, dict)]
+    docs, by_region = [], {}
+    for u in urls:
+        d = fetcher(lobby_file(u, "status.json"))
+        d = d if isinstance(d, dict) else None
+        r = region_of(u, d)
+        if d is not None:
+            docs.append(d)
+        if r and (d is not None or r not in by_region):
+            by_region[r] = d
     if docs:
-        new = build_status(docs, now_iso())
+        new = build_status(docs, now_iso(), by_region)
     elif not mastery_up:
         new = {"updated": now_iso(), "up": False}
     else:
@@ -432,6 +463,24 @@ def selftest():
                                                 "estimated": 40, "since": "2026-11-18"}},
                       {"online": 2, "matches": {"total": "x"}}, {"online": 0}], "t")
     assert m["matches"] == {"total": 120, "today": 7, "by_mode": {"quickplay": 100, "arena": 15, "room": 5}}, m
+    # regions: the official lobbies by host name (or a "region" in the document), a lobby that does not answer is "up": false,
+    # the v0.4.x lobby (no region) only in the top-level sums
+    sdocs = {"http://eu.lobby.opensmashultimate.com:39421/status.json": {"online": 4, "rooms": 1, "matches": {"total": 10, "today": 2}},
+             "http://na.lobby.opensmashultimate.com:39421/status.json": None,
+             "http://old.example:39421/status.json": {"online": 6, "rooms": 2},
+             "http://x.example/status.json": {"online": 1, "region": "NA-East"}}
+    with tempfile.TemporaryDirectory() as d:
+        sp = os.path.join(d, "status.json")
+        run_status([u.replace("status.json", "") for u in sdocs], sp, sdocs.get, True)
+        st = read_json(sp)
+        assert st["online"] == 11 and st["rooms"] == 3, st
+        assert st["regions"]["eu"] == {"up": True, "online": 4, "rooms": 1, "arenas": 0, "open_rooms": 0, "playing": 0,
+                                       "matches": {"total": 10, "today": 2, "by_mode": {"quickplay": 0, "arena": 0, "room": 0}}}, st
+        assert st["regions"]["na-east"]["up"] is True and st["regions"]["na-east"]["online"] == 1, "a region's answer beats its silent lobby"
+        assert sorted(st["regions"]) == ["eu", "na-east"]
+        run_status(["http://eu.lobby.opensmashultimate.com:39421/", "http://na.lobby.opensmashultimate.com:39421/"], sp, sdocs.get, True)
+        assert read_json(sp)["regions"]["na-east"] == {"up": False}
+    assert region_of("http://EU.lobby.opensmashultimate.com:39421/x") == "eu" and region_of("http://old.example/") is None
     assert same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:05:00Z"})
     assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:11:00Z"})
     assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 2, "updated": "2026-01-01T00:00:01Z"})

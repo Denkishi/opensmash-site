@@ -28,12 +28,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="css/style.css?v=2">
-<link rel="stylesheet" href="css/home.css?v=7">
+<link rel="stylesheet" href="css/home.css?v=8">
 <script src="config.js"></script>
 <script src="js/hero.js?v=3" defer></script>
-<script src="js/snapshot.js?v=4" defer></script>
+<script src="js/snapshot.js?v=5" defer></script>
 <script src="js/fighters.js?v=2" defer></script>
-<script src="js/home.js?v=7" defer></script>
+<script src="js/home.js?v=8" defer></script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"OpenSmash-Ultimate","applicationCategory":"GameApplication","operatingSystem":"Windows 10, Windows 11 (x64)","license":"https://www.gnu.org/licenses/gpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Open-source native PC port of Super Smash Bros. Ultimate by static recompilation. Build it from your own game. Not affiliated with Nintendo."}
 </script>
@@ -120,6 +120,9 @@
           <h3>Online now</h3>
           <span class="pill" id="pill" role="status" aria-live="polite" data-s=""><i></i><span id="pill-text">Checking&hellip;</span></span>
         </div>
+        <div class="region-switch" id="region-switch" role="group" aria-label="Region">
+          <button type="button" data-r="" aria-pressed="true">Total</button><button type="button" data-r="eu" aria-pressed="false" title="Europe">EU</button><button type="button" data-r="na-east" aria-pressed="false" title="North America East">NA</button>
+        </div>
         <dl class="status-grid">
           <div><dt>Players online</dt><dd id="t-online">&ndash;</dd></div>
           <div><dt>Rooms</dt><dd id="t-rooms">&ndash;</dd></div>
@@ -127,8 +130,8 @@
           <div><dt>Players with mastery</dt><dd id="t-mastery">&ndash;</dd></div>
         </dl>
         <p class="matches" id="matches" hidden><b id="t-matches"></b> online matches played<span id="t-matches-today"></span></p>
-        <div class="status-foot"><span id="upd"></span><span>One server, Europe</span></div>
-        <p class="status-msg">Rollback netplay, mastery points per fighter, Discord Rich Presence with Join. Epic Online Services relays as the fallback for every region.</p>
+        <div class="status-foot"><span id="upd"></span><span id="where">Europe + North America East</span></div>
+        <p class="status-msg">Rollback netplay on two regions, Europe and North America East. Mastery points per fighter, Discord Rich Presence with Join.</p>
       </div>
       <div class="lb" aria-label="Top mastery">
         <div class="board-head">
