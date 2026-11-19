@@ -1,4 +1,4 @@
-/* Home page: live lobby counts (status.json) and the top 10 mastery points (mastery.json). Both are snapshots
+/* Home page: live lobby counts (status.json) and the top 10 Global Mastery Points (mastery.json). Both are snapshots
    written every few minutes by .github/workflows/leaderboard.yml to the `data` branch (the lobby is plain HTTP; this
    page is HTTPS); js/snapshot.js loads them. The "Updated x min ago" labels tick every 30 s between fetches. */
 (function () {
@@ -49,47 +49,31 @@
 
   function cell(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; e.textContent = text; return e; }
 
-  /* A Discord profile picture if the snapshot lists one (same check as the mastery page), else the initial. */
-  var AVATAR_RE = /^https:\/\/cdn\.discordapp\.com\/(avatars\/[0-9]+\/(a_)?[0-9a-f]{32}\.png\?size=64|embed\/avatars\/[0-5]\.png)$/;
-  function initial(name) { return cell("span", "initial", (name || "A").charAt(0).toUpperCase()); }
-  function avatar(p) {
-    if (!p || typeof p.avatar !== "string" || !AVATAR_RE.test(p.avatar)) return initial(p && p.name);
-    var img = document.createElement("img");
-    img.className = "avatar"; img.alt = ""; img.width = img.height = 28;
-    img.loading = "lazy"; img.decoding = "async"; img.referrerPolicy = "no-referrer";
-    img.addEventListener("error", function () { if (img.parentNode) img.parentNode.replaceChild(initial(p.name), img); });
-    img.src = p.avatar;
-    return img;
-  }
   function pts(p) {
     var t = typeof p.total === "number" ? p.total : (Number(p.points) || 0) + (Number(p.veteran) || 0);
     return Math.floor(t).toLocaleString("en-US");
   }
-  /* Points only (engagement, not skill): no levels, no tiers. */
+  /* Global Mastery Points (GMP), points only: # | fighter icon (the main, or the chosen fighter) | player | GMP. */
   function render(key) {
-    var body = $("rows"), head = $("head"), rows = [];
-    body.textContent = ""; head.textContent = "";
+    var body = $("rows"), list;
+    body.textContent = "";
     if (!board || !board.total.length) {
-      $("table-wrap").hidden = true; $("empty").hidden = false; return;
+      $("table-wrap").hidden = true; $("empty").hidden = false; $("credit").textContent = ""; return;
     }
     $("empty").hidden = true; $("table-wrap").hidden = false;
-    ["#", "Player", "Points"].forEach(function (c, i) { head.appendChild(cell("th", i === 2 ? "num" : "", c)); });
-    if (key && Array.isArray(board.fighters[key])) {
-      rows = board.fighters[key].slice(0, TOP).map(function (p, i) { return [p.pos || i + 1, p.name, null, pts(p), p]; });
-    } else {
-      rows = board.total.slice(0, TOP).map(function (p, i) { return [p.pos || i + 1, p.name, p.fighter ? OSU_FIGHTER(p.fighter) : null, pts(p), p]; });
-    }
-    rows.forEach(function (r) {
+    if (!$("credit").firstChild) $("credit").appendChild(OSU_ICON_CREDIT());
+    key = key && Array.isArray(board.fighters[key]) ? key : "";
+    list = (key ? board.fighters[key] : board.total).slice(0, TOP);
+    list.forEach(function (p, i) {
       var tr = document.createElement("tr");
-      tr.appendChild(cell("td", "pos", String(r[0])));
-      var pc = cell("td", ""), box = cell("div", "player", "");
-      box.appendChild(avatar(r[4]));
-      var who = cell("span", "", r[1] || "Anonymous");
-      if (r[2] !== null) who.appendChild(cell("small", "fn", r[2]));
-      box.appendChild(who);
-      pc.appendChild(box);
-      tr.appendChild(pc);
-      tr.appendChild(cell("td", "num", String(r[3])));
+      tr.appendChild(cell("td", "pos", String(p.pos || i + 1)));
+      var fc = cell("td", "ficon-cell", "");
+      fc.appendChild(OSU_FIGHTER_EL(key || p.fighter || ""));
+      tr.appendChild(fc);
+      tr.appendChild(cell("td", "pname", p.name || "Anonymous"));
+      var n = cell("td", "num", pts(p));
+      if (p.veteran > 0) n.title = Math.floor(p.points || 0).toLocaleString("en-US") + " from matches + " + Math.floor(p.veteran).toLocaleString("en-US") + " veteran bonus";
+      tr.appendChild(n);
       body.appendChild(tr);
     });
   }

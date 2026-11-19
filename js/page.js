@@ -1,4 +1,4 @@
-/* Shared by the account, mastery and GSP archive pages: nav menu, small helpers. No dependencies, no tracking. */
+/* Shared by the account, mastery, competitive and GSP archive pages: nav menu, small helpers. No dependencies, no tracking. */
 (function () {
   "use strict";
   var toggle = document.querySelector(".nav-toggle"), menu = document.getElementById("nav-links");
@@ -15,6 +15,7 @@
   }
   var cfg = window.OSU_CONFIG || {};
   document.querySelectorAll("[data-link=repo]").forEach(function (a) { if (cfg.REPO_URL) a.href = cfg.REPO_URL; });
+  document.querySelectorAll("[data-link=discord]").forEach(function (a) { if (cfg.DISCORD_URL) a.href = cfg.DISCORD_URL; });
 
   window.OSU = {
     /* Build an element; text is always set with textContent (names come from players: never innerHTML). */

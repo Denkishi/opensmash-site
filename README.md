@@ -9,12 +9,14 @@ GPL-3.0 like the project. Not affiliated with Nintendo.
 
 | Path | What it is |
 |---|---|
-| `index.html`, `css/home.css`, `js/hero.js`, `js/home.js`, `js/snapshot.js`, `js/nav-login.js`, `js/fighters.js` | the home page: hero, live counts, top 10 mastery (all fighters or one), install, the Register / Log in button |
+| `index.html`, `css/home.css`, `js/hero.js`, `js/home.js`, `js/snapshot.js`, `js/nav-login.js`, `js/fighters.js` | the home page: hero, live counts, top 10 Global Mastery Points (all fighters or one, with fighter icons), install, the Register / Log in button |
 | `css/style.css` | the shared design |
 | `config.js` | links: repository, Discord |
 | `js/opensmash-auth.js`, `js/opensmash-account-ui.js`, `auth/callback/` | "Sign in with your OpenSmash account" (see below) |
-| `leaderboard/`, `js/mastery.js` | the Mastery page (top 100 overall and per fighter, points only) and the "Ranked lives in SSBU Arena" section with Arena's `/embed/leaderboard` iframe |
-| `leaderboard/gsp/`, `js/gsp-archive.js` | the GSP archive: the frozen GSP leaderboard, read only |
+| `leaderboard/`, `js/mastery.js` | the Mastery page: Global Mastery Points (GMP), top 100 overall and per fighter (# / fighter icon / player / GMP), drawn 50 rows at a time as you scroll; signed in, the player's own GMP, rank and top fighters first |
+| `competitive/` | the Competitive page: SSBU Arena's ranked (same account), its `/embed/leaderboard` iframe, download and website buttons |
+| `leaderboard/gsp/`, `js/gsp-archive.js` | the GSP archive: the frozen GSP leaderboard, read only (no longer linked from the other pages) |
+| `js/fighters.js` | fighter names and icons: Max_Hamm's stock icons loaded from ssbuarena.com (no image in this repository), credited under each table; the name's initial if an icon is missing |
 | `account/`, `js/account-mastery.js`, `css/pages.css`, `js/page.js` | the account page (shared OpenSmash account) with the player's own mastery |
 | `mastery.json`, `leaderboard.json`, `status.json` | fallback copies only (mastery.json empty); the live ones are on the `data` branch |
 | `.github/workflows/leaderboard.yml`, `.github/scripts/leaderboard.py` | the snapshot job |

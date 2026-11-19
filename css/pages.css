@@ -42,17 +42,52 @@ table.board tbody tr:nth-child(-n+3) td.pos { color: var(--red); }
 .picker select { background: var(--bg-3); color: var(--fg); border: 1px solid var(--line); padding: 10px 12px; font: inherit; min-width: 220px; }
 .hidden { display: none !important; }
 
-/* Mastery page: the "not a skill ranking" line, the SSBU Arena section and its iframe; the account's own mastery. */
+/* Mastery page: the player's own status, the GMP table with fighter icons and its infinite list; the competitive page's
+   SSBU Arena iframe; the account's own mastery. */
 .page .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0 6px; }
-.notice.not-skill { border-left-color: var(--red); color: var(--fg); margin: 0 0 14px; }
-.notice.not-skill a { color: var(--fg); }
 table.board td .fn { display: block; color: var(--fg-mute); font-size: 12px; }
 /* "incl. veteran" under the points, right-aligned with them (style.css's home ".num span" would make it a 240 px block
    with a 10 px top margin: reset here) */
 table.board td.num .vet { display: block; max-width: none; margin: 2px 0 0; color: var(--fg-mute); font-size: 11px; line-height: 1.1; font-family: var(--mono); }
 #my-mastery > p:last-child { margin-top: 14px; }
-.competitive { margin-top: 56px; padding-top: 8px; border-top: 1px solid var(--line); }
+.page h1 + .lede { margin-bottom: 20px; }
+/* Fighter icons (js/fighters.js): Max_Hamm's stock icons served by ssbuarena.com, or the name's initial on a disc. */
+.ficon { display: inline-block; width: 28px; height: 28px; max-width: none; object-fit: contain; flex: none; vertical-align: middle; }
+.ficon-initial { display: inline-grid; place-items: center; border-radius: 50%; background: var(--bg-3); color: var(--fg-dim); font-weight: 800; font-size: 13px; line-height: 1; }
+.icon-credit { margin: 8px 0 0; color: var(--fg-mute); font-size: 12px; }
+.icon-credit a { color: inherit; text-underline-offset: 2px; }
+.icon-credit a:hover { color: var(--fg); }
+table.mastery-board th.pos-h { width: 1%; }
+table.mastery-board th.ficon-h, table.mastery-board td.ficon-cell { width: 40px; min-width: 40px; padding-left: 6px; padding-right: 6px; text-align: center; }
+table.mastery-board td.ficon-cell .ficon { display: block; margin: 0 auto; }
+table.mastery-board td.pname { white-space: normal; overflow-wrap: anywhere; font-weight: 500; }
+table.mastery-board td { vertical-align: middle; }
+.more { height: 1px; }
+#count { margin: 8px 0 0; }
+/* The signed-in player's own status, above the list. */
+.me-panel { margin: 0 0 22px; }
+.me-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr); gap: 18px 32px; align-items: center; }
+.me-who { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.me-who .ficon { width: 56px; height: 56px; }
+.me-who .ficon-initial { font-size: 24px; }
+.me-who p { margin: 0; }
+.me-name { font-family: var(--display); font-size: clamp(26px, 4vw, 36px); line-height: 1.05; overflow-wrap: anywhere; }
+.me-stats { display: flex; gap: 32px; margin: 0; }
+.me-stats div { min-width: 0; }
+.me-stats dt { color: var(--fg-mute); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-family: var(--mono); }
+.me-stats dd { margin: 2px 0 0; font-family: var(--display); font-size: 40px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.me-top-title { margin: 0 0 6px; color: var(--fg-mute); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-family: var(--mono); }
+.me-top ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.me-top li { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.me-top-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-top-pts { font-family: var(--mono); color: var(--fg-dim); }
+@media (max-width: 860px) {
+  .me-grid { grid-template-columns: 1fr; gap: 16px; }
+}
+/* Competitive page: SSBU Arena's ranked leaderboard in an iframe. */
+.competitive { margin-top: 40px; padding-top: 8px; border-top: 1px solid var(--line); }
 .competitive h2 span { color: var(--red); }
+.competitive .muted { margin: 10px 0 0; }
 /* The embed sends no size message (checked 19/11/2026: no postMessage to the parent), so the height is fixed: room for
    its top 10 without a tall empty box while ranked is still empty (its empty state is ~200 px); longer content scrolls. */
 .embed-frame { border: 1px solid var(--line); background: var(--bg-2); max-width: 760px; }
@@ -62,9 +97,9 @@ table.board td.num .vet { display: block; max-width: none; margin: 2px 0 0; colo
 .panel + .panel { margin-top: 20px; }
 @media (max-width: 560px) {
   table.board th, table.board td { padding: 8px 10px; font-size: 15px; }
+  table.mastery-board th.ficon-h, table.mastery-board td.ficon-cell { width: 34px; min-width: 34px; padding-left: 3px; padding-right: 3px; }
   .embed-frame iframe { height: 420px; }
+  .me-stats dd { font-size: 34px; }
 }
-/* The nav link "Competitive (SSBU Arena)": in the full-screen phone menu the "(SSBU Arena)" goes on a small second line. */
-@media (max-width: 860px) { .nav-links a .nav-sub { display: block; font-family: var(--sans); font-size: 14px; font-weight: 700; letter-spacing: .14em; text-align: center; color: var(--fg-dim); } }
 @media (min-width: 861px) { .nav-links a { white-space: nowrap; } }
-@media (min-width: 861px) and (max-width: 1340px) { .nav-links a .nav-sub { display: none; } .nav-links a { padding-left: 8px; padding-right: 8px; letter-spacing: .08em; } .nav-links .nav-cta { padding-left: 14px; padding-right: 14px; } }
+@media (min-width: 861px) and (max-width: 1100px) { .nav-links a { padding-left: 8px; padding-right: 8px; letter-spacing: .08em; } .nav-links .nav-cta { padding-left: 14px; padding-right: 14px; } }

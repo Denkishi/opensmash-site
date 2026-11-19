@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mastery: OpenSmash-Ultimate</title>
-<meta name="description" content="OpenSmash-Ultimate mastery points: points per fighter earned by playing online. Engagement points, not a skill ranking; competitive ranked lives in SSBU Arena.">
+<meta name="description" content="OpenSmash-Ultimate Global Mastery Points (GMP): points per fighter earned by playing online.">
 <meta name="theme-color" content="#050505">
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="noindex">
@@ -12,12 +12,12 @@
 <link rel="icon" href="../assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="../css/style.css?v=2">
-<link rel="stylesheet" href="../css/pages.css?v=3">
+<link rel="stylesheet" href="../css/pages.css?v=4">
 <script src="../config.js"></script>
 <script src="../js/snapshot.js?v=4" defer></script>
-<script src="../js/page.js?v=4" defer></script>
-<script src="../js/fighters.js?v=1" defer></script>
-<script src="../js/mastery.js?v=1" defer></script>
+<script src="../js/page.js?v=5" defer></script>
+<script src="../js/fighters.js?v=2" defer></script>
+<script src="../js/mastery.js?v=2" defer></script>
 <script src="../js/opensmash-auth.js?v=2" defer></script>
 <script src="../js/nav-login.js?v=5" defer></script>
 </head>
@@ -30,10 +30,11 @@
   </a>
   <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span class="sr">Menu</span></button>
   <nav id="nav-links" class="nav-links" aria-label="Sections">
-    <a href="../#install">Install</a>
     <a href="../#online">Online</a>
+    <a href="../#install">Install</a>
     <a href="../leaderboard/" class="active" aria-current="page">Mastery</a>
-    <a href="https://www.ssbuarena.com/" rel="noopener" title="SSBU Arena: ranked 1v1, same account">Competitive <span class="nav-sub">(SSBU Arena)</span></a>
+    <a href="../competitive/">Competitive</a>
+    <a data-link="discord" href="https://discord.gg/pkgyYGf3YB" rel="noopener">Discord</a>
     <a class="nav-cta" id="nav-login" href="../account/">Register / Log in</a>
     <a class="nav-cta" data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener">GitHub</a>
   </nav>
@@ -41,9 +42,24 @@
 <main id="main" class="page">
   <div class="wrap">
     <h1>Mas<span>tery</span></h1>
-    <p class="lede">Mastery points per fighter, earned by playing online. They only go up: online matches add points, a loss never takes any away.</p>
-    <p class="notice not-skill"><b>Engagement points, not a skill ranking.</b> The list shows who has played the most with each fighter. The competitive ladder is SSBU Arena's ranked, <a href="#competitive">below</a>.</p>
-    <p class="muted" id="note">Players who did not choose to show their name appear as Anonymous. Points are summed over the regions (Europe, North America East).</p>
+    <p class="lede">Global Mastery Points (GMP): points per fighter from online matches, summed over every region.</p>
+
+    <section id="me" class="panel me-panel hidden" aria-labelledby="me-title" aria-live="polite">
+      <h2 id="me-title" class="sr">Your status</h2>
+      <div id="me-status" class="muted">Loading&hellip;</div>
+      <div id="me-content" class="me-grid hidden">
+        <div class="me-who">
+          <span id="me-main"></span>
+          <div><p class="me-name" id="me-name"></p><p class="muted" id="me-main-name"></p></div>
+        </div>
+        <dl class="me-stats">
+          <div><dt>GMP</dt><dd id="me-total"></dd></div>
+          <div><dt>Rank</dt><dd id="me-rank"></dd></div>
+        </dl>
+        <div class="me-top"><p class="me-top-title">Top fighters</p><ol id="me-top"></ol></div>
+      </div>
+    </section>
+
     <p class="muted" id="updated"></p>
     <div id="status" class="notice" role="status" aria-live="polite">Loading&hellip;</div>
 
@@ -53,23 +69,15 @@
         <select id="fighter"><option value="">All fighters</option></select>
       </div>
       <div class="table-wrap">
-        <table class="board">
-          <thead><tr id="head"></tr></thead>
+        <table class="board mastery-board">
+          <thead><tr><th class="pos-h">#</th><th class="ficon-h"><span class="sr">Fighter</span></th><th>Player</th><th class="num">GMP</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <div id="more" class="more" aria-hidden="true"></div>
+      <p class="muted small" id="count" aria-live="polite"></p>
+      <div id="credit"></div>
     </div>
-    <p class="btn-row"><a class="btn btn-outline" href="../account/"><span>Your mastery</span></a> <a class="btn btn-outline" href="gsp/"><span>GSP archive</span></a></p>
-    <p class="muted small">GSP archive: the old GSP leaderboard as it was when GSP was frozen, read only.</p>
-
-    <section id="competitive" class="competitive" aria-labelledby="competitive-title">
-      <h2 id="competitive-title">Ranked lives in <span>SSBU Arena</span></h2>
-      <p class="lede">For ranked 1v1 with tournament rules, go to SSBU Arena: same account, a skill rating per account and its own leaderboard.</p>
-      <div class="embed-frame">
-        <iframe src="https://www.ssbuarena.com/embed/leaderboard?theme=dark&amp;limit=10&amp;controls=0" title="SSBU Arena ranked leaderboard" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
-      </div>
-      <p class="btn-row"><a class="btn btn-solid" href="https://www.ssbuarena.com/leaderboard" rel="noopener"><span>SSBU Arena ranked leaderboard</span></a> <a class="btn btn-outline" href="https://www.ssbuarena.com/" rel="noopener"><span>About SSBU Arena</span></a></p>
-    </section>
   </div>
 </main>
 <footer class="footer">
