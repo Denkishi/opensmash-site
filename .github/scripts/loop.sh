@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Snapshot loop run by .github/workflows/leaderboard.yml. The `data` branch is checked out in $DATA_DIR.
-# Every INTERVAL_S seconds (default 150) until LOOP_S (default 21000 = 5 h 50 m) have passed: fetch the lobby,
-# and when status.json / leaderboard.json changed (or the heartbeat in leaderboard.py says the age is getting
+# Every INTERVAL_S seconds (default 150) until LOOP_S (default 21000 = 5 h 50 m) have passed: fetch the lobbies,
+# and when status.json / mastery.json changed (or the heartbeat in leaderboard.py says the age is getting
 # old) amend the single commit of `data` and force-push it. The branch is not served by Pages: no Pages builds.
 set -u
 : "${DATA_DIR:?}"

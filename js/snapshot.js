@@ -1,4 +1,4 @@
-/* Live snapshots (status.json, leaderboard.json). The lobby is plain HTTP and this site is HTTPS, so a workflow copies
+/* Live snapshots (status.json, mastery.json). The lobbies are plain HTTP and this site is HTTPS, so a workflow copies
    the lobby's JSON to the `data` branch every few minutes; we read it from raw.githubusercontent.com (CORS enabled)
    and fall back to the copy served next to the page by GitHub Pages. */
 (function () {
@@ -9,11 +9,13 @@
       return r.json();
     });
   }
-  /* status.json can come straight from the lobby over HTTPS (Caddy in front of it, tools/deploy/CADDY.md in the game
-     repository) which is live to the second. It is tried first; after a failure it is skipped for 5 minutes so an
-     undeployed or unreachable lobby costs one short request, not one per refresh. */
-  var LOBBY_DIRECT = { "status.json": true };
+  /* status.json can come straight from the official lobbies, live to the second, once each of them is reachable over
+     HTTPS (OSU_CONFIG.LOBBY_HTTPS: {region: "https://host/"}). They already send Access-Control-Allow-Origin: *, but serve
+     plain HTTP only, and an HTTPS page may not read an http:// address (mixed content): until then LOBBY_HTTPS is empty and
+     the page reads the snapshot. The live answer has the snapshot's shape: summed counts plus "regions". After a failure
+     the live read is skipped for 5 minutes so an unreachable lobby costs one short request, not one per refresh. */
   var lobbyDownUntil = 0;
+  var COUNT_KEYS = ["online", "rooms", "arenas", "open_rooms", "playing"];
   function getJsonTimeout(url, ms) {
     var ctl = window.AbortController ? new AbortController() : null;
     var timer = ctl ? setTimeout(function () { ctl.abort(); }, ms) : null;
@@ -23,14 +25,38 @@
       return r.json();
     }, function (e) { if (timer) clearTimeout(timer); throw e; });
   }
+  function liveLobbies() {
+    var l = (window.OSU_CONFIG || {}).LOBBY_HTTPS, out = [];
+    if (!l || typeof l !== "object") return out;
+    Object.keys(l).forEach(function (r) {
+      var u = l[r];
+      if (typeof u === "string" && (/^https:\/\//.test(u) || (location.protocol === "http:" && /^http:\/\//.test(u)))) out.push([r, u.replace(/\/?$/, "/")]);
+    });
+    return out;
+  }
   function fromLobby(name) {
-    var url = (window.OSU_CONFIG || {}).LOBBY_HTTPS;
-    if (!url || !LOBBY_DIRECT[name] || Date.now() < lobbyDownUntil) return Promise.reject(new Error("skip"));
-    return getJsonTimeout(url + name, 4000).then(function (d) {
-      if (!d || typeof d.online !== "number") throw new Error("bad file");
-      d.up = d.up !== false;
-      d.updated = new Date().toISOString(); // live: the answer is from this moment
-      return d;
+    var lobbies = name === "status.json" ? liveLobbies() : [];
+    if (!lobbies.length || Date.now() < lobbyDownUntil) return Promise.reject(new Error("skip"));
+    return Promise.all(lobbies.map(function (l) {
+      return getJsonTimeout(l[1] + name, 4000).then(function (d) {
+        if (!d || typeof d.online !== "number") throw new Error("bad file");
+        return d;
+      }, function () { return null; });
+    })).then(function (docs) {
+      if (!docs.some(Boolean)) throw new Error("no lobby");
+      var out = { updated: new Date().toISOString(), up: true, regions: {} }; // live: the answer is from this moment
+      COUNT_KEYS.forEach(function (k) { out[k] = 0; });
+      docs.forEach(function (d, i) {
+        var reg = { up: !!d };
+        if (d) COUNT_KEYS.forEach(function (k) { var n = Number(d[k]) || 0; reg[k] = n; out[k] += n; });
+        if (d && d.matches && typeof d.matches.total === "number") {
+          reg.matches = { total: d.matches.total, today: Number(d.matches.today) || 0 };
+          out.matches = out.matches || { total: 0, today: 0 };
+          out.matches.total += reg.matches.total; out.matches.today += reg.matches.today;
+        }
+        out.regions[lobbies[i][0]] = reg;
+      });
+      return out;
     }).catch(function (e) { lobbyDownUntil = Date.now() + 300000; throw e; });
   }
   /* name: "status.json"; localPrefix: "" on the home page, "../" in a sub-folder. */

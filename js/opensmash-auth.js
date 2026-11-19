@@ -164,23 +164,36 @@
     return refresh().then(function (n) { return n.access; }, function (e) { if (e.fatal) return null; throw e; });
   }
 
-  function fetchProfile() {
-    function once(t, sub) {
-      return window.fetch(PROFILES + "?select=id,username,tag,elo,created_at&id=eq." + encodeURIComponent(sub), {
-        headers: { "apikey": PUBLISHABLE_KEY, "Authorization": "Bearer " + t }
-      });
+  /* A request to the shared project as the signed-in player (publishable key + the access token). After a 401: one
+     refresh, one retry; if still refused the session ends. Resolves to the Response, or null when signed out. */
+  function authed(url, init) {
+    init = init || {};
+    function once(t) {
+      var h = { "apikey": PUBLISHABLE_KEY, "Authorization": "Bearer " + t };
+      if (init.json) h["Content-Type"] = "application/json";
+      var o = { headers: h };
+      if (init.method) o.method = init.method;
+      if (init.json) o.body = JSON.stringify(init.json);
+      return window.fetch(url, o);
     }
     return token().then(function (t) {
-      var s = get();
-      if (!t || !s) return null;
-      return once(t, s.sub).then(function (r) {
+      if (!t || !get()) return null;
+      return once(t).then(function (r) {
         if (r.status !== 401) return r;
         var cur = get(); if (cur) { cur.exp = 0; put(cur); } // force one refresh, then retry once
-        return refresh().then(function (n) { return once(n.access, n.sub); }, function (e) { if (e.fatal) return null; throw e; });
+        return refresh().then(function (n) { return once(n.access); }, function (e) { if (e.fatal) return null; throw e; });
       });
     }).then(function (r) {
+      if (r && r.status === 401) { sdel("localStorage", KEY); changed(); return null; }
+      return r;
+    });
+  }
+
+  function fetchProfile() {
+    var s0 = get();
+    if (!s0) return Promise.resolve(null);
+    return authed(PROFILES + "?select=id,username,tag,elo,created_at&id=eq." + encodeURIComponent(s0.sub)).then(function (r) {
       if (!r) return null;
-      if (r.status === 401) { sdel("localStorage", KEY); changed(); return null; }
       if (!r.ok) throw new Error("The account service answered HTTP " + r.status + ".");
       return r.json().then(function (rows) {
         var p = Array.isArray(rows) && rows[0];
@@ -190,6 +203,77 @@
         if (!s) return null; // signed out meanwhile
         s.profile = p; put(s); changed();
         return p;
+      });
+    });
+  }
+
+  /* Mastery points (Global Mastery Points, GMP) live in the shared project: the one copy that sums every region (EU, NA East)
+     and SSBU Arena, so this site and Arena's show the same numbers. */
+  var FIGHTER_RE = /^[a-z0-9_]{1,32}$/;
+  /* A fighter as the database returns it: normally a key ("jack"), but a name ("Joker", "Pyra / Mythra") is accepted too
+     (js/fighters.js resolves both); anything else is dropped. Shown with textContent only. */
+  var FIGHTER_IN_RE = /^[A-Za-z0-9_ .&\/'\u00e9-]{1,40}$/;
+  function num(v) { var x = Number(v); return v !== null && v !== "" && typeof v !== "boolean" && isFinite(x) && x >= 0 ? Math.floor(x) : 0; }
+  function numOrNull(v) { return v == null || v === "" ? null : num(v); }
+  function rpcError(r) {
+    if (r.status === 404) { var e = new Error("Mastery points are not available yet."); e.missing = true; return e; }
+    return new Error("The account service answered HTTP " + r.status + ".");
+  }
+
+  /* The public board, anyone (publishable key only): public.opensmash_mastery_board(p_fighter, p_limit, p_offset).
+     Resolves to {rows: [{pos, id, name (null: hidden), tag, main_fighter, total, games}], count: total_count or null}. */
+  function masteryBoard(fighter, limit, offset) {
+    var body = { p_fighter: fighter && FIGHTER_RE.test(fighter) ? fighter : null,
+                 p_limit: Math.max(1, Math.min(100, Math.floor(Number(limit) || 50))), p_offset: Math.max(0, Math.floor(Number(offset) || 0)) };
+    return window.fetch(PROJECT + "/rest/v1/rpc/opensmash_mastery_board", {
+      method: "POST", headers: { "apikey": PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) throw rpcError(r);
+      return r.json().then(function (rows) {
+        if (!Array.isArray(rows)) throw new Error("The account service sent an unexpected answer.");
+        var count = null, out = [];
+        rows.forEach(function (x) {
+          if (!x || typeof x !== "object" || typeof x.id !== "string" || !/^[0-9a-f]{16}$/.test(x.id) || !(num(x.pos) > 0)) return;
+          if (count === null && x.total_count != null) count = num(x.total_count);
+          out.push({ pos: num(x.pos), id: x.id, name: typeof x.name === "string" && x.name.trim() ? x.name.trim().slice(0, 64) : null,
+                     tag: x.tag == null ? null : num(x.tag), main_fighter: typeof x.main_fighter === "string" && FIGHTER_IN_RE.test(x.main_fighter) ? x.main_fighter : null,
+                     total: num(x.total), games: num(x.games) });
+        });
+        return { rows: out, count: count };
+      });
+    });
+  }
+
+  /* The signed-in player's points per fighter, every region and SSBU Arena summed (public.my_opensmash_mastery()).
+     Resolves to [{fighter, points, veteran, total, games, wins, updated_at, points_opensmash, points_arena}] sorted by
+     total, or null when signed out. Rejects with .missing = true while the function is not deployed. */
+  function myMastery() {
+    return authed(PROJECT + "/rest/v1/rpc/my_opensmash_mastery", { method: "POST", json: {} }).then(function (r) {
+      if (!r) return null;
+      if (!r.ok) throw rpcError(r);
+      return r.json().then(function (rows) {
+        if (!Array.isArray(rows)) throw new Error("The account service sent an unexpected answer.");
+        return rows.filter(function (x) { return x && typeof x.fighter === "string" && FIGHTER_IN_RE.test(x.fighter); }).map(function (x) {
+          var points = num(x.points), veteran = num(x.veteran);
+          return { fighter: x.fighter, points: points, veteran: veteran, total: x.total == null ? points + veteran : num(x.total), games: num(x.games),
+                   wins: num(x.wins), updated_at: typeof x.updated_at === "string" ? x.updated_at : null,
+                   points_opensmash: numOrNull(x.points_opensmash), points_arena: numOrNull(x.points_arena) };
+        }).sort(function (a, b) { return b.total - a.total || a.fighter.localeCompare(b.fighter); });
+      });
+    });
+  }
+
+  /* The signed-in player's place on the overall board (public.my_opensmash_mastery_rank()): {pos, id, total, total_count,
+     main_fighter}; null when signed out or without points. Rejects with .missing = true while it is not deployed. */
+  function myMasteryRank() {
+    return authed(PROJECT + "/rest/v1/rpc/my_opensmash_mastery_rank", { method: "POST", json: {} }).then(function (r) {
+      if (!r) return null;
+      if (!r.ok) throw rpcError(r);
+      return r.json().then(function (d) {
+        var x = Array.isArray(d) ? d[0] : d;
+        if (!x || typeof x !== "object" || !(num(x.pos) > 0)) return null;
+        return { pos: num(x.pos), id: typeof x.id === "string" ? x.id : null, total: num(x.total), total_count: numOrNull(x.total_count),
+                 main_fighter: typeof x.main_fighter === "string" && FIGHTER_IN_RE.test(x.main_fighter) ? x.main_fighter : null };
       });
     });
   }
@@ -218,7 +302,8 @@
   window.OpenSmashAuth = {
     KEY: KEY, manageUrl: MANAGE_URL,
     configured: configured, startSignIn: startSignIn, finishSignIn: finishSignIn,
-    signedIn: signedIn, get: get, profile: profile, token: token, fetchProfile: fetchProfile,
+    signedIn: signedIn, get: get, profile: profile, token: token, fetchProfile: fetchProfile, myMastery: myMastery,
+    myMasteryRank: myMasteryRank, masteryBoard: masteryBoard,
     displayName: displayName, signOut: signOut, signInLink: signInLink, signUpLink: signUpLink
   };
 })();

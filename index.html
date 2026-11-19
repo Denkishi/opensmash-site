@@ -14,7 +14,7 @@
      "assets/og-image.png" and og:url with the full https:// address of the site (see README.md). -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="OpenSmash-Ultimate: recompiled, not emulated">
-<meta property="og:description" content="A native PC port made by static recompilation. Vulkan renderer, one-click installer, fighters as C++ source, online play, GSP ranked and a live leaderboard. Open source, GPL-3.0. Not affiliated with Nintendo.">
+<meta property="og:description" content="A native PC port made by static recompilation. Vulkan renderer, one-click installer, fighters as C++ source, online play with mastery points per fighter. Open source, GPL-3.0. Not affiliated with Nintendo.">
 <meta property="og:image" content="https://denkishi.github.io/opensmash-site/assets/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -28,15 +28,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="css/style.css?v=2">
-<link rel="stylesheet" href="css/home.css?v=5">
+<link rel="stylesheet" href="css/home.css?v=8">
 <script src="config.js"></script>
 <script src="js/hero.js?v=3" defer></script>
-<script src="js/snapshot.js?v=4" defer></script>
-<script src="js/home.js?v=5" defer></script>
+<script src="js/snapshot.js?v=5" defer></script>
+<script src="js/fighters.js?v=4" defer></script>
+<script src="js/home.js?v=9" defer></script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"OpenSmash-Ultimate","applicationCategory":"GameApplication","operatingSystem":"Windows 10, Windows 11 (x64)","license":"https://www.gnu.org/licenses/gpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Open-source native PC port of Super Smash Bros. Ultimate by static recompilation. Build it from your own game. Not affiliated with Nintendo."}
 </script>
-<script src="js/opensmash-auth.js?v=1" defer></script>
+<script src="js/opensmash-auth.js?v=4" defer></script>
 <script src="js/nav-login.js?v=5" defer></script>
 </head>
 <body>
@@ -65,7 +66,8 @@
   <nav id="nav-links" class="nav-links" aria-label="Sections">
     <a href="#online">Online</a>
     <a href="#install">Install</a>
-    <a href="leaderboard/">Leaderboard</a>
+    <a href="leaderboard/">Mastery</a>
+    <a href="competitive/">Competitive</a>
     <a data-link="discord" href="https://discord.gg/pkgyYGf3YB" rel="noopener">Discord</a>
     <a class="nav-cta" id="nav-login" href="account/">Register / Log in</a>
     <a class="nav-cta" data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener">GitHub</a>
@@ -87,14 +89,14 @@
       <span class="line l1"><span>OPEN</span><span class="red">SMASH</span></span>
       <span class="line l2"><span class="outline">ULTIMATE</span></span>
     </h1>
-    <p class="tagline"><strong>Recompiled, not emulated.</strong> Smash Ultimate as a native PC program, with rollback online play and a ranked leaderboard.</p>
+    <p class="tagline"><strong>Recompiled, not emulated.</strong> Smash Ultimate as a native PC program, with rollback online play and mod support.</p>
     <div class="cta-row">
       <a class="btn btn-primary" href="#install"><span>Get it</span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h12M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5"/></svg></a>
       <a class="btn btn-ghost" data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z"/></svg><span>GitHub</span></a>
       <a class="btn btn-ghost" data-link="discord" href="https://discord.gg/pkgyYGf3YB" rel="noopener"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18 18 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.5C.6 9.1-.3 13.7.1 18.2a19.8 19.8 0 0 0 6 3l1.3-2.1a12.8 12.8 0 0 1-2-1l.5-.4a14 14 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.7 19.7 0 0 0 6-3c.5-5.2-.8-9.8-3.6-13.8zM8 15.4c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.6 8 10.6s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg><span data-label>Discord</span></a>
     </div>
     <ul class="chips" aria-label="At a glance">
-      <li>Vulkan &middot; Direct3D 11 &middot; Metal</li><li>Rollback netplay</li><li>GSP ranked</li><li>No game files included</li>
+      <li>Vulkan &middot; Direct3D 11 &middot; Metal</li><li>Rollback netplay</li><li>ARCropolis mods</li><li>No game files included</li>
     </ul>
   </div>
   <div class="hero-cut" aria-hidden="true"></div>
@@ -118,27 +120,31 @@
           <h3>Online now</h3>
           <span class="pill" id="pill" role="status" aria-live="polite" data-s=""><i></i><span id="pill-text">Checking&hellip;</span></span>
         </div>
+        <div class="region-switch" id="region-switch" role="group" aria-label="Region">
+          <button type="button" data-r="" aria-pressed="true">Total</button><button type="button" data-r="eu" aria-pressed="false" title="Europe">EU</button><button type="button" data-r="na-east" aria-pressed="false" title="North America East">NA</button>
+        </div>
         <dl class="status-grid">
           <div><dt>Players online</dt><dd id="t-online">&ndash;</dd></div>
           <div><dt>Rooms</dt><dd id="t-rooms">&ndash;</dd></div>
           <div><dt>Arenas</dt><dd id="t-arenas">&ndash;</dd></div>
-          <div><dt>Ranked players</dt><dd id="t-ranked">&ndash;</dd></div>
+          <div><dt>Players with mastery</dt><dd id="t-mastery">&ndash;</dd></div>
         </dl>
         <p class="matches" id="matches" hidden><b id="t-matches"></b> online matches played<span id="t-matches-today"></span></p>
-        <div class="status-foot"><span id="upd"></span><span>One server, Europe</span></div>
-        <p class="status-msg">Rollback netplay, GSP ranked, Discord Rich Presence with Join. Epic Online Services relays as the fallback for every region.</p>
+        <div class="status-foot"><span id="upd"></span><span id="where">Europe + North America East</span></div>
+        <p class="status-msg">Rollback netplay on two regions, Europe and North America East. Mastery points per fighter, Discord Rich Presence with Join.</p>
       </div>
-      <div class="lb" aria-label="Leaderboard">
+      <div class="lb" aria-label="Top mastery">
         <div class="board-head">
-          <h3>Top 10</h3>
-          <label class="sr" for="fighter">Ranking</label>
-          <select id="fighter"><option value="">Overall</option></select>
+          <h3>Top 10 mastery</h3>
+          <label class="sr" for="fighter">List</label>
+          <select id="fighter"><option value="">All fighters</option></select>
         </div>
-        <p class="empty" id="empty">No ranked players yet. Play online to be the first.</p>
+        <p class="empty" id="empty">No mastery points yet. Play online to be the first.</p>
         <div class="table-wrap" id="table-wrap" hidden>
-          <table class="board"><thead><tr id="head"></tr></thead><tbody id="rows"></tbody></table>
+          <table class="board"><thead><tr><th>#</th><th class="ficon-h"><span class="sr">Fighter</span></th><th>Player</th><th class="num">GMP</th></tr></thead><tbody id="rows"></tbody></table>
         </div>
-        <p class="board-foot"><a class="navbtn" href="leaderboard/">Full leaderboard</a><a class="navbtn" href="account/">Sign in</a><span id="board-upd"></span></p>
+        <div id="credit"></div>
+        <p class="board-foot"><a class="navbtn" href="leaderboard/">All mastery</a><a class="navbtn" href="competitive/">Competitive</a><a class="navbtn" href="account/">Sign in</a></p>
       </div>
     </div>
   </div>
@@ -151,9 +157,9 @@
     <ul class="grid">
       <li class="card"><h3>Native, not emulated</h3><p>The game's code translated to C once and compiled for x64. No interpreter, no JIT.</p></li>
       <li class="card"><h3>Vulkan by default</h3><p>Vulkan renderer, Direct3D 11 as a choice, Metal on Macs, a faster first start.</p></li>
-      <li class="card"><h3>Online with rollback</h3><p>Rollback netplay for fights, room codes, LAN rooms, one lobby server.</p></li>
+      <li class="card"><h3>Online with rollback</h3><p>Rollback netplay for fights, room codes, LAN rooms, lobbies in Europe and North America East.</p></li>
       <li class="card"><h3>Battle Arenas</h3><p>Find or create an arena by its code, right from the game's online menu.</p></li>
-      <li class="card"><h3>GSP ranked</h3><p>GSP per fighter and a public leaderboard on this site.</p></li>
+      <li class="card"><h3>Mastery points</h3><p>Points per fighter from your online matches, and they only go up. Ranked play: <a href="competitive/">Competitive</a>, same account.</p></li>
       <li class="card"><h3>Discord</h3><p>Sign in, Rich Presence with Join, an optional name on the board.</p></li>
       <li class="card"><h3>Mods and ARCropolis</h3><p>Launcher and mod manager, ARCropolis mods, Skyline plugins, a switch for each mod.</p></li>
       <li class="card"><h3>Controllers</h3><p>Dead zones, invert, GameCube adapters, keyboard keys, in-game settings (<kbd>F1</kbd>).</p></li>

@@ -342,6 +342,87 @@ test("fetchProfile: server error rejects but keeps the session", async () => {
   assert.equal(env.A.signedIn(), true);
 });
 
+test("myMastery: exact RPC request, rows checked and sorted by total", async () => {
+  const f = makeFetch(c => c.url.endsWith("/rest/v1/rpc/my_opensmash_mastery") ? { status: 200, body: [
+    { fighter: "mario", points: 120, veteran: 1000, total: 1120, games: 3, wins: 1, updated_at: "x", points_opensmash: 100, points_arena: "20" },
+    { fighter: "pzenigame", points: "2400", veteran: 0, total: 2400, games: 30 },
+    { fighter: "<b>", points: 5 }, null, { fighter: "fox", points: -4, veteran: null, games: 1 }] } : { status: 500, body: {} });
+  const env = makeEnv({ fetch: f });
+  seedSession(env);
+  const rows = await env.A.myMastery();
+  assert.deepEqual(rows, [
+    { fighter: "pzenigame", points: 2400, veteran: 0, total: 2400, games: 30, wins: 0, updated_at: null, points_opensmash: null, points_arena: null },
+    { fighter: "mario", points: 120, veteran: 1000, total: 1120, games: 3, wins: 1, updated_at: "x", points_opensmash: 100, points_arena: 20 },
+    { fighter: "fox", points: 0, veteran: 0, total: 0, games: 1, wins: 0, updated_at: null, points_opensmash: null, points_arena: null }]);
+  const c = f.calls[0];
+  assert.equal(f.calls.length, 1);
+  assert.equal(c.method, "POST");
+  assert.equal(c.url, "https://gnufjvqwynxmudpgrded.supabase.co/rest/v1/rpc/my_opensmash_mastery");
+  assert.equal(c.body, "{}");
+  assert.equal(c.headers.apikey, KEY);
+  assert.equal(c.headers["Content-Type"], "application/json");
+  assert.equal(c.headers.Authorization, "Bearer " + JSON.parse(env.ls.getItem("osu_account")).access);
+});
+
+test("myMastery: signed out -> null without a request; 404 (not deployed) -> .missing; 401 twice ends the session", async () => {
+  const f0 = makeFetch(() => ({ status: 200, body: [] }));
+  const e0 = makeEnv({ fetch: f0 });
+  assert.equal(await e0.A.myMastery(), null);
+  assert.equal(f0.calls.length, 0);
+  const e1 = makeEnv({ fetch: makeFetch(() => ({ status: 404, body: { code: "PGRST202" } })) });
+  seedSession(e1);
+  await assert.rejects(e1.A.myMastery(), e => e.missing === true);
+  assert.equal(e1.A.signedIn(), true);
+  const f2 = makeFetch(c => c.url === TOKEN_URL ? { status: 200, body: tokenReply(7) } : { status: 401, body: {} });
+  const e2 = makeEnv({ fetch: f2 }); seedSession(e2);
+  assert.equal(await e2.A.myMastery(), null);
+  assert.deepEqual(f2.calls.map(c => c.url === TOKEN_URL ? "token" : "rpc"), ["rpc", "token", "rpc"]);
+  assert.equal(e2.A.signedIn(), false);
+});
+
+test("masteryBoard: anonymous RPC (publishable key only), exact body, rows checked, total_count read", async () => {
+  const f = makeFetch(c => c.url.endsWith("/rest/v1/rpc/opensmash_mastery_board") ? { status: 200, body: [
+    { pos: 51, id: "0123456789abcdef", name: "Nelly", tag: 7, avatar: null, main_fighter: "pzenigame", total: "3300", games: 12, total_count: 140 },
+    { pos: 52, id: "fedcba9876543210", name: null, tag: 9, avatar: null, main_fighter: "<b>", total: 3000, games: 9, total_count: 140 },
+    { pos: 53, id: "not-an-id", name: "x", total: 1 }, null, { pos: 0, id: "aaaaaaaaaaaaaaaa", total: 5 }] } : { status: 500, body: {} });
+  const env = makeEnv({ fetch: f });
+  seedSession(env); // signed in or not, the board is read without the player's token
+  const res = await env.A.masteryBoard("mario", 50, 50);
+  assert.deepEqual(res, { count: 140, rows: [
+    { pos: 51, id: "0123456789abcdef", name: "Nelly", tag: 7, main_fighter: "pzenigame", total: 3300, games: 12 },
+    { pos: 52, id: "fedcba9876543210", name: null, tag: 9, main_fighter: null, total: 3000, games: 9 }] });
+  const c = f.calls[0];
+  assert.equal(f.calls.length, 1);
+  assert.equal(c.method, "POST");
+  assert.equal(c.url, "https://gnufjvqwynxmudpgrded.supabase.co/rest/v1/rpc/opensmash_mastery_board");
+  assert.deepEqual(JSON.parse(c.body), { p_fighter: "mario", p_limit: 50, p_offset: 50 });
+  assert.equal(c.headers.apikey, KEY);
+  assert.equal(c.headers.Authorization, undefined);
+  await env.A.masteryBoard("<script>", 5000, -3);
+  assert.deepEqual(JSON.parse(f.calls[1].body), { p_fighter: null, p_limit: 100, p_offset: 0 });
+  const e404 = makeEnv({ fetch: makeFetch(() => ({ status: 404, body: {} })) });
+  await assert.rejects(e404.A.masteryBoard(null, 50, 0), e => e.missing === true);
+  const empty = await makeEnv({ fetch: makeFetch(() => ({ status: 200, body: [] })) }).A.masteryBoard(null, 50, 200);
+  assert.deepEqual(empty, { rows: [], count: null });
+});
+
+test("myMasteryRank: authed RPC, one row (array or object), null without points or signed out", async () => {
+  const f = makeFetch(c => c.url.endsWith("/rest/v1/rpc/my_opensmash_mastery_rank") ? { status: 200, body: [
+    { pos: "23", id: "0123456789abcdef", total: 8930, total_count: 111, main_fighter: "mario" }] } : { status: 500, body: {} });
+  const env = makeEnv({ fetch: f });
+  seedSession(env);
+  assert.deepEqual(await env.A.myMasteryRank(), { pos: 23, id: "0123456789abcdef", total: 8930, total_count: 111, main_fighter: "mario" });
+  assert.equal(f.calls[0].method, "POST");
+  assert.equal(f.calls[0].headers.Authorization, "Bearer " + JSON.parse(env.ls.getItem("osu_account")).access);
+  const e1 = makeEnv({ fetch: makeFetch(() => ({ status: 200, body: [] })) }); seedSession(e1);
+  assert.equal(await e1.A.myMasteryRank(), null);
+  const e2 = makeEnv({ fetch: makeFetch(() => ({ status: 200, body: { pos: 2, id: "0123456789abcdef", total: 5, total_count: null, main_fighter: null } })) }); seedSession(e2);
+  assert.deepEqual(await e2.A.myMasteryRank(), { pos: 2, id: "0123456789abcdef", total: 5, total_count: null, main_fighter: null });
+  const f0 = makeFetch(() => ({ status: 200, body: [] }));
+  assert.equal(await makeEnv({ fetch: f0 }).A.myMasteryRank(), null);
+  assert.equal(f0.calls.length, 0);
+});
+
 test("signOut is local only: no request, session and pending gone, event fired", async () => {
   const f = makeFetch(() => ({ status: 200, body: {} }));
   const env = makeEnv({ fetch: f });

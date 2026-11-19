@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Leaderboard: OpenSmash-Ultimate</title>
-<meta name="description" content="The OpenSmash-Ultimate online leaderboard: ranked by GSP, overall and per fighter.">
+<title>Mastery: OpenSmash-Ultimate</title>
+<meta name="description" content="OpenSmash-Ultimate Global Mastery Points (GMP): points per fighter earned by playing online.">
 <meta name="theme-color" content="#050505">
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="noindex">
@@ -12,12 +12,13 @@
 <link rel="icon" href="../assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="../css/style.css?v=2">
-<link rel="stylesheet" href="../css/pages.css">
+<link rel="stylesheet" href="../css/pages.css?v=6">
 <script src="../config.js"></script>
-<script src="../js/snapshot.js?v=4" defer></script>
-<script src="../js/page.js?v=3" defer></script>
-<script src="../js/leaderboard.js?v=3" defer></script>
-<script src="../js/opensmash-auth.js?v=1" defer></script>
+<script src="../js/snapshot.js?v=5" defer></script>
+<script src="../js/page.js?v=6" defer></script>
+<script src="../js/fighters.js?v=4" defer></script>
+<script src="../js/mastery.js?v=3" defer></script>
+<script src="../js/opensmash-auth.js?v=4" defer></script>
 <script src="../js/nav-login.js?v=5" defer></script>
 </head>
 <body>
@@ -29,32 +30,52 @@
   </a>
   <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span class="sr">Menu</span></button>
   <nav id="nav-links" class="nav-links" aria-label="Sections">
-    <a href="../#install">Install</a>
     <a href="../#online">Online</a>
-    <a href="../leaderboard/" class="active" aria-current="page">Leaderboard</a>
+    <a href="../#install">Install</a>
+    <a href="../leaderboard/" class="active" aria-current="page">Mastery</a>
+    <a href="../competitive/">Competitive</a>
+    <a data-link="discord" href="https://discord.gg/pkgyYGf3YB" rel="noopener">Discord</a>
     <a class="nav-cta" id="nav-login" href="../account/">Register / Log in</a>
     <a class="nav-cta" data-link="repo" href="https://github.com/OpenSmash-Ultimate/OpenSmash-Ultimate" rel="noopener">GitHub</a>
   </nav>
 </header>
 <main id="main" class="page">
   <div class="wrap">
-    <h1>Leader<span>board</span></h1>
-    <p class="lede">Online players ranked by GSP. Pick a fighter to see who is best with it.</p>
-    <p class="muted" id="note">Players who did not choose to show their Discord name appear as Anonymous.</p>
-    <p class="muted" id="updated"></p>
+    <h1>Mas<span>tery</span></h1>
+    <p class="lede">Global Mastery Points (GMP): points per fighter from online matches in every region and in SSBU Arena.</p>
+
+    <section id="me" class="panel me-panel hidden" aria-labelledby="me-title" aria-live="polite">
+      <h2 id="me-title" class="sr">Your status</h2>
+      <div id="me-status" class="muted">Loading&hellip;</div>
+      <div id="me-content" class="me-grid hidden">
+        <div class="me-who">
+          <span id="me-main"></span>
+          <div><p class="me-name" id="me-name"></p><p class="muted" id="me-main-name"></p></div>
+        </div>
+        <dl class="me-stats">
+          <div><dt>GMP</dt><dd id="me-total"></dd></div>
+          <div><dt>Rank</dt><dd id="me-rank"></dd><span class="me-of" id="me-of"></span></div>
+        </dl>
+        <div class="me-top"><p class="me-top-title">Top fighters</p><ol id="me-top"></ol></div>
+      </div>
+    </section>
+
     <div id="status" class="notice" role="status" aria-live="polite">Loading&hellip;</div>
 
     <div id="content" class="hidden">
       <div class="picker">
-        <label for="fighter">Ranking</label>
-        <select id="fighter"><option value="">Overall</option></select>
+        <label for="fighter">List</label>
+        <select id="fighter"><option value="">All fighters</option></select>
       </div>
       <div class="table-wrap">
-        <table class="board">
-          <thead><tr id="head"></tr></thead>
+        <table class="board mastery-board">
+          <thead><tr><th class="pos-h">#</th><th class="ficon-h"><span class="sr">Fighter</span></th><th>Player</th><th class="num">GMP</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <div id="more" class="more" aria-hidden="true"></div>
+      <p class="muted small" id="count" aria-live="polite"></p>
+      <div id="credit"></div>
     </div>
   </div>
 </main>
