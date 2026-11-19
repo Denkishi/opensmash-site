@@ -47,17 +47,22 @@ table.board tbody tr:nth-child(-n+3) td.pos { color: var(--red); }
 .notice.not-skill { border-left-color: var(--red); color: var(--fg); margin: 0 0 14px; }
 .notice.not-skill a { color: var(--fg); }
 table.board td .fn { display: block; color: var(--fg-mute); font-size: 12px; }
-table.board td .vet { color: var(--fg-mute); font-size: 12px; margin-left: 6px; font-family: var(--mono); }
+/* "incl. veteran" under the points, right-aligned with them (style.css's home ".num span" would make it a 240 px block
+   with a 10 px top margin: reset here) */
+table.board td.num .vet { display: block; max-width: none; margin: 2px 0 0; color: var(--fg-mute); font-size: 11px; line-height: 1.1; font-family: var(--mono); }
+#my-mastery > p:last-child { margin-top: 14px; }
 .competitive { margin-top: 56px; padding-top: 8px; border-top: 1px solid var(--line); }
 .competitive h2 span { color: var(--red); }
+/* The embed sends no size message (checked 19/11/2026: no postMessage to the parent), so the height is fixed: room for
+   its top 10 without a tall empty box while ranked is still empty (its empty state is ~200 px); longer content scrolls. */
 .embed-frame { border: 1px solid var(--line); background: var(--bg-2); max-width: 760px; }
-.embed-frame iframe { display: block; width: 100%; height: 640px; border: 0; }
+.embed-frame iframe { display: block; width: 100%; height: 440px; border: 0; }
 .my-total { font-family: var(--display); font-size: 40px; line-height: 1.1; margin: 8px 0 14px; }
 .my-total small { font-family: var(--sans); font-size: 14px; color: var(--fg-mute); letter-spacing: .12em; text-transform: uppercase; margin-left: 8px; }
 .panel + .panel { margin-top: 20px; }
 @media (max-width: 560px) {
   table.board th, table.board td { padding: 8px 10px; font-size: 15px; }
-  .embed-frame iframe { height: 600px; }
+  .embed-frame iframe { height: 420px; }
 }
 /* The nav link "Competitive (SSBU Arena)": in the full-screen phone menu the "(SSBU Arena)" goes on a small second line. */
 @media (max-width: 860px) { .nav-links a .nav-sub { display: block; font-family: var(--sans); font-size: 14px; font-weight: 700; letter-spacing: .14em; text-align: center; color: var(--fg-dim); } }
