@@ -27,8 +27,8 @@ To look at it locally: `python -m http.server 8000` in this folder, then open ht
 
 ## Live data
 
-The online lobby (`opensmash-lobby.duckdns.org:39421`) answers plain HTTP on its TCP port, and this site is HTTPS, so the
-browser cannot read it directly. The **Update mastery and status** workflow therefore copies the lobbies'
+The official lobbies (`eu.lobby.opensmashultimate.com:39421`, `na.lobby.opensmashultimate.com:39421`) answer plain HTTP on
+their TCP port, and this site is HTTPS, so the browser cannot read them directly. The **Update mastery and status** workflow therefore copies the lobbies'
 `/mastery.json` (summed) and `/status.json` to the **`data` branch** (a single commit, force-pushed; Pages does not serve it, so
 no Pages build is triggered). The page reads
 `https://raw.githubusercontent.com/Denkishi/opensmash-site/data/<file>` (CORS enabled; `DATA_BASE` in `config.js`) and falls
@@ -54,7 +54,7 @@ by hand: Actions > Update mastery and status > Run workflow.
 - `status.json`: `{"updated","up","online","rooms","arenas","open_rooms","playing"}`. Counts only. Needs the lobby
   built with `/status.json` (OpenSmash-Ultimate PR #370); until it is redeployed the file is absent and the page shows
   "Live counts coming soon". If the lobby does not answer at all, `up` becomes `false` and the page says so.
-  The top-level counts are summed over every lobby; `"regions": {"eu": {...}, "na-east": {...}}` has the official lobbies'
+  The top-level counts are the two official regions summed (no other lobby is counted); `"regions": {"eu": {...}, "na-east": {...}}` has the official lobbies'
   own counts (`"up": false` for one that did not answer), by host name (`REGION_OF_HOST` in `leaderboard.py`). The home's
   "Online now" card shows Total (the two regions summed) or one region. The lobbies send `Access-Control-Allow-Origin: *`
   but serve plain HTTP only, which an HTTPS page may not read (mixed content), so the page reads this snapshot; once they
