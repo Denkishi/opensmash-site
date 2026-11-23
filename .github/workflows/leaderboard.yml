@@ -1,7 +1,8 @@
-name: Update leaderboard and status
+name: Update mastery and status
 
-# One long-running job that snapshots the lobby (plain HTTP, so the HTTPS site cannot read it) every ~2.5 minutes
-# and writes status.json / leaderboard.json to the `data` branch (not served by Pages: no Pages builds).
+# One long-running job that snapshots the lobbies (plain HTTP, so the HTTPS site cannot read them) every ~2.5 minutes
+# and writes status.json / mastery.json (mastery points summed over the regions) to the `data` branch (not served by
+# Pages: no Pages builds). The GSP leaderboard is frozen: its last leaderboard.json is copied once to gsp_archive.json.
 # The site reads https://raw.githubusercontent.com/Denkishi/opensmash-site/data/<file>.
 #
 # Reliability: GitHub's cron is best effort and often skipped, so the job loops for 5 h 50 m and then starts its own
@@ -40,6 +41,8 @@ jobs:
         run: python .github/scripts/leaderboard.py --selftest
       - name: Sign-in self-test (offline)
         run: node .github/opensmash-auth.test.cjs
+      - name: Fighter names and icons self-test (offline)
+        run: node .github/fighters.test.cjs
       - name: Snapshot loop (5 h 50 m)
         env:
           DATA_DIR: ${{ github.workspace }}/data

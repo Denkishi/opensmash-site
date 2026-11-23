@@ -1,4 +1,4 @@
-/* Shared by the account and leaderboard pages: nav menu, small helpers. No dependencies, no tracking. */
+/* Shared by the account, mastery, competitive and GSP archive pages: nav menu, small helpers. No dependencies, no tracking. */
 (function () {
   "use strict";
   var toggle = document.querySelector(".nav-toggle"), menu = document.getElementById("nav-links");
@@ -15,6 +15,7 @@
   }
   var cfg = window.OSU_CONFIG || {};
   document.querySelectorAll("[data-link=repo]").forEach(function (a) { if (cfg.REPO_URL) a.href = cfg.REPO_URL; });
+  document.querySelectorAll("[data-link=discord]").forEach(function (a) { if (cfg.DISCORD_URL) a.href = cfg.DISCORD_URL; });
 
   window.OSU = {
     /* Build an element; text is always set with textContent (names come from players: never innerHTML). */
@@ -24,12 +25,19 @@
       if (text != null) e.textContent = text;
       return e;
     },
-    loadBoard: function () {
-      return OSUData.load("leaderboard.json", "../").then(function (d) {
+    /* The frozen GSP list (gsp_archive.json; before the workflow has frozen it, the last leaderboard.json). */
+    loadGspArchive: function (localPrefix) {
+      function check(d) {
         if (!d || !Array.isArray(d.players)) throw new Error("bad file");
         d.fighters = d.fighters || {};
         return d;
+      }
+      return OSUData.load("gsp_archive.json", localPrefix).then(check).catch(function () {
+        return OSUData.load("leaderboard.json", localPrefix).then(check);
       });
+    },
+    fmtNum: function (n) {
+      return typeof n === "number" && isFinite(n) ? Math.floor(n).toLocaleString("en-US") : "-";
     },
     fighterName: function (data, kind) {
       var f = data.fighters && data.fighters[kind];

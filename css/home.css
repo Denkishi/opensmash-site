@@ -5,7 +5,7 @@
 .hero-title { font-size: clamp(48px, 9vw, 120px); }
 .live-sec, .install-sec { padding: clamp(48px, 7vw, 90px) 0; }
 .live-title { font-family: var(--display); font-weight: 400; font-size: clamp(40px, 6vw, 72px); line-height: .95; margin: 0 0 24px; text-transform: uppercase; }
-.live-row { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(20px, 4vw, 56px); align-items: start; }
+.live-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px, 4vw, 56px); align-items: start; }
 .status-grid dd { font-variant-numeric: tabular-nums; }
 .matches { margin: .75rem 0 0; font-size: .95rem; opacity: .9; }
 .matches[hidden] { display: none; }
@@ -51,7 +51,35 @@ table.board tbody tr:nth-child(-n+3) td.pos { color: var(--red); }
 .features .card h3 { font-size: 22px; margin: 0 0 6px; }
 .features .card p { font-size: 14px; line-height: 1.45; }
 
-/* Leaderboard rows: Discord picture (or the initial) beside the name, as on the full leaderboard page. */
-.lb .player { display: flex; align-items: center; gap: 10px; }
-.lb .avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--bg-3); flex: none; }
-.lb .initial { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-3); color: var(--fg-dim); display: grid; place-items: center; font-weight: 800; font-size: 13px; flex: none; }
+/* Top 10 rows: # | fighter icon (Max_Hamm's stock icons from ssbuarena.com, js/fighters.js; else the initial) | player | GMP. */
+.lb .ficon { display: block; width: 28px; height: 28px; max-width: none; object-fit: contain; margin: 0 auto; }
+.lb .ficon-initial { display: grid; place-items: center; border-radius: 50%; background: var(--bg-3); color: var(--fg-dim); font-weight: 800; font-size: 13px; }
+.lb th.ficon-h, .lb td.ficon-cell { width: 36px; min-width: 36px; padding-left: 4px; padding-right: 4px; text-align: center; }
+.lb td.pname { overflow-wrap: anywhere; font-weight: 500; }
+.lb td { vertical-align: middle; height: 38px; padding-top: 4px; padding-bottom: 4px; }
+.icon-credit { margin: 6px 0 0; color: var(--fg-mute); font-size: 12px; }
+.icon-credit a { color: inherit; text-underline-offset: 2px; }
+.icon-credit a:hover { color: var(--fg); }
+/* The two blocks side by side ("Online now" and the top 10) are cards of the same height and top: the counts grid grows to
+   fill its card, the top 10's buttons sit at the bottom of theirs. Stacked below 860 px. */
+.live-row { align-items: stretch; }
+.live-row > .status, .live-row > .lb { display: flex; flex-direction: column; min-width: 0; }
+.live-row > .status .status-grid { flex: 1 1 auto; grid-auto-rows: 1fr; }
+.live-row > .status .status-grid div { display: flex; flex-direction: column; justify-content: center; }
+.lb { position: relative; background: var(--bg-2); border: 1px solid var(--line); padding: 30px 28px 26px;
+  clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 30px 100%, 0 calc(100% - 30px)); }
+.lb::before { content: ""; position: absolute; left: 0; top: 0; height: 4px; width: 100%; background: var(--red); }
+.lb .board-head { margin-bottom: 24px; min-height: 40px; }
+.lb .board-head h3 { font-size: 32px; line-height: 1; }
+.lb .table-wrap { background: var(--bg); }
+.lb .board-foot { margin-top: auto; padding-top: 14px; }
+@media (max-width: 860px) { .lb, .status { padding: 24px 18px 20px; } .lb .board-head h3 { font-size: 28px; } }
+@media (min-width: 861px) { .nav-links a { white-space: nowrap; } }
+@media (min-width: 861px) and (max-width: 1100px) { .nav-links a { padding-left: 8px; padding-right: 8px; letter-spacing: .08em; } .nav-links .nav-cta { padding-left: 14px; padding-right: 14px; } }
+/* "Online now": Total / EU / NA (js/home.js). */
+.region-switch { display: inline-flex; margin: -8px 0 18px; border: 1px solid var(--line); align-self: flex-start; }
+.region-switch button { background: transparent; color: var(--fg-dim); border: 0; border-left: 1px solid var(--line); padding: 8px 16px; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; transition: background .2s, color .2s; }
+.region-switch button:first-child { border-left: 0; }
+.region-switch button:hover { color: var(--fg); }
+.region-switch button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.region-switch button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
