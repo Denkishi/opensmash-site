@@ -53,6 +53,9 @@
     showMatches(v);
     var pill = $("pill"), txt = $("pill-text"), upd = $("upd");
     $("where").textContent = region ? REGION_NAMES[region] : "All regions";
+    /* (mastery points are one count over every region - the shared account project - so a region's view says so) */
+    var lm = $("l-mastery");
+    if (lm) lm.textContent = region ? "Players with mastery (all regions)" : "Players with mastery";
     function dashes() {
       COUNT_KEYS.forEach(function (k) { $("t-" + k).textContent = "-"; });
     }
