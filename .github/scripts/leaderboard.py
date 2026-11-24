@@ -38,7 +38,10 @@ STATUS_KEYS = ("online", "rooms", "arenas", "open_rooms", "playing")
 # lists their counts apart under "regions" for the home page's Total / EU / NA / SA switch; the top-level counts are their sum.
 # A lobby of no region (not an official one) is not counted at all.
 REGION_OF_HOST = {"eu.lobby.opensmashultimate.com": "eu", "na.lobby.opensmashultimate.com": "na-east",
-                  "sa.lobby.opensmashultimate.com": "sa"}
+                  "sa.lobby.opensmashultimate.com": "sa", "opensmash-lobby.duckdns.org": "eu"}
+# Lobbies counted in status.json only (never their /mastery.json): the lobby v0.4 games still play on (Europe), whose
+# players the official lobbies above do not see. Two lobbies of one region are summed into it.
+STATUS_ONLY = ["https://opensmash-lobby.duckdns.org/"]
 MATCH_MODES = ("quickplay", "arena", "room")
 _ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 # DATA_DIR: where the snapshots are written (the workflow checks the `data` branch out there). Default: repo root.
@@ -311,7 +314,9 @@ def run_status(urls, status_path, fetcher, mastery_up):
             continue
         if d is not None:
             docs.append(d)
-        if d is not None or r not in by_region:
+        if isinstance(d, dict) and isinstance(by_region.get(r), dict):
+            by_region[r] = _counts([by_region[r], d])   # (a second lobby of the region: summed)
+        elif d is not None or r not in by_region:
             by_region[r] = d
     if docs:
         new = build_status(docs, now_iso(), by_region)
@@ -365,7 +370,7 @@ def run(urls, out_path=MASTERY_PATH, fetcher=fetch, status_path=STATUS_PATH, gsp
     freeze_gsp(gsp_path, archive_path)
     docs = [d for d in (fetcher(lobby_file(u, "mastery.json")) for u in urls) if isinstance(d, dict)]
     if status_path:
-        run_status(urls, status_path, fetcher, bool(docs))
+        run_status(urls + [u for u in STATUS_ONLY if u not in urls], status_path, fetcher, bool(docs))
     if not docs:
         log("no lobby serves /mastery.json: leaving mastery.json alone")
         return 0
@@ -485,6 +490,13 @@ def selftest():
         assert sorted(st["regions"]) == ["eu", "na-east", "sa"]
         run_status(["http://eu.lobby.opensmashultimate.com:39421/", "http://na.lobby.opensmashultimate.com:39421/"], sp, sdocs.get, True)
         assert read_json(sp)["regions"]["na-east"] == {"up": False}
+    with tempfile.TemporaryDirectory() as d:   # (the v0.4 lobby: summed into Europe, status only)
+        sp = os.path.join(d, "status.json")
+        two = {"http://eu.lobby.opensmashultimate.com:39421/status.json": {"online": 1, "rooms": 1},
+               "https://opensmash-lobby.duckdns.org/status.json": {"online": 43, "all_regions": 44}}
+        run_status(["http://eu.lobby.opensmashultimate.com:39421/", "https://opensmash-lobby.duckdns.org/"], sp, two.get, True)
+        st = read_json(sp)
+        assert st["online"] == 44 and st["regions"]["eu"]["online"] == 44 and st["regions"]["eu"]["rooms"] == 1, st
     assert region_of("http://EU.lobby.opensmashultimate.com:39421/x") == "eu" and region_of("http://old.example/") is None
     assert region_of("http://sa.lobby.opensmashultimate.com:39421/") == "sa"
     assert sorted(region_of(u) for u in LOBBIES) == ["eu", "na-east", "sa"], "the default lobbies are the three official ones only"
