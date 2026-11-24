@@ -1,5 +1,5 @@
-/* Home page: live lobby counts (status.json: the official lobbies, Europe and North America East, summed and per region,
-   with a Total / EU / NA switch: a snapshot written every few minutes by .github/workflows/leaderboard.yml to the `data`
+/* Home page: live lobby counts (status.json: the official lobbies, Europe, North America East and South America, summed and per
+   region, with a Total / EU / NA / SA switch: a snapshot written every few minutes by .github/workflows/leaderboard.yml to the `data`
    branch, as the lobbies are plain HTTP and this page is HTTPS; js/snapshot.js loads it) and the top 10 Global Mastery
    Points (read from the shared account project, the same numbers as SSBU Arena's site). The "Updated x min ago" labels tick every 30 s between fetches. */
 (function () {
@@ -11,11 +11,11 @@
   var ago = OSUData.ago;
   function num(v) { return typeof v === "number" && isFinite(v) ? String(v) : "-"; }
 
-  /* The region shown on the "Online now" card: "" (Total: the official regions summed), "eu" or "na-east". */
-  var REGION_NAMES = { eu: "Europe", "na-east": "North America East" }, COUNT_KEYS = ["online", "rooms", "arenas"];
+  /* The region shown on the "Online now" card: "" (Total: the official regions summed), "eu", "na-east" or "sa". */
+  var REGION_NAMES = { eu: "Europe", "na-east": "North America East", sa: "South America" }, COUNT_KEYS = ["online", "rooms", "arenas"];
   var region = ""; // Total on every visit
 
-  /* One region's counts from status.json ({"regions": {"eu": {...}, "na-east": {...}}}, js/snapshot.js), or the Total:
+  /* One region's counts from status.json ({"regions": {"eu": {...}, "na-east": {...}, "sa": {...}}}, js/snapshot.js), or the Total:
      the regions summed (the top-level sums of an older snapshot without regions). null: no data for that view. */
   function view(s, r) {
     if (!s || typeof s !== "object") return null;
@@ -52,7 +52,7 @@
     var v = view(s, region);
     showMatches(v);
     var pill = $("pill"), txt = $("pill-text"), upd = $("upd");
-    $("where").textContent = region ? REGION_NAMES[region] : "Europe + North America East";
+    $("where").textContent = region ? REGION_NAMES[region] : "All regions";
     function dashes() {
       COUNT_KEYS.forEach(function (k) { $("t-" + k).textContent = "-"; });
     }

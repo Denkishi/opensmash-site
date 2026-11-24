@@ -28,15 +28,17 @@ import urllib.request
 from datetime import datetime, timezone
 
 LOBBIES = [
-    # the official lobbies, and only them (relay only, signed-in players): Europe and North America East
+    # the official lobbies, and only them (relay only, signed-in players): Europe, North America East and South America
     "http://eu.lobby.opensmashultimate.com:39421/",
     "http://na.lobby.opensmashultimate.com:39421/",
+    "http://sa.lobby.opensmashultimate.com:39421/",
 ]
 STATUS_KEYS = ("online", "rooms", "arenas", "open_rooms", "playing")
 # The region of each official lobby, by host name (its /status.json does not name one; a "region" in it wins). status.json
-# lists their counts apart under "regions" for the home page's Total / EU / NA switch; the top-level counts are their sum.
+# lists their counts apart under "regions" for the home page's Total / EU / NA / SA switch; the top-level counts are their sum.
 # A lobby of no region (not an official one) is not counted at all.
-REGION_OF_HOST = {"eu.lobby.opensmashultimate.com": "eu", "na.lobby.opensmashultimate.com": "na-east"}
+REGION_OF_HOST = {"eu.lobby.opensmashultimate.com": "eu", "na.lobby.opensmashultimate.com": "na-east",
+                  "sa.lobby.opensmashultimate.com": "sa"}
 MATCH_MODES = ("quickplay", "arena", "room")
 _ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 # DATA_DIR: where the snapshots are written (the workflow checks the `data` branch out there). Default: repo root.
@@ -468,21 +470,24 @@ def selftest():
     # a lobby of no region (not an official one) is not counted at all
     sdocs = {"http://eu.lobby.opensmashultimate.com:39421/status.json": {"online": 4, "rooms": 1, "matches": {"total": 10, "today": 2}},
              "http://na.lobby.opensmashultimate.com:39421/status.json": None,
+             "http://sa.lobby.opensmashultimate.com:39421/status.json": {"online": 2, "rooms": 0},
              "http://old.example:39421/status.json": {"online": 6, "rooms": 2},
              "http://x.example/status.json": {"online": 1, "region": "NA-East"}}
     with tempfile.TemporaryDirectory() as d:
         sp = os.path.join(d, "status.json")
         run_status([u.replace("status.json", "") for u in sdocs], sp, sdocs.get, True)
         st = read_json(sp)
-        assert st["online"] == 5 and st["rooms"] == 1, st
+        assert st["online"] == 7 and st["rooms"] == 1, st
         assert st["regions"]["eu"] == {"up": True, "online": 4, "rooms": 1, "arenas": 0, "open_rooms": 0, "playing": 0,
                                        "matches": {"total": 10, "today": 2, "by_mode": {"quickplay": 0, "arena": 0, "room": 0}}}, st
         assert st["regions"]["na-east"]["up"] is True and st["regions"]["na-east"]["online"] == 1, "a region's answer beats its silent lobby"
-        assert sorted(st["regions"]) == ["eu", "na-east"]
+        assert st["regions"]["sa"]["up"] is True and st["regions"]["sa"]["online"] == 2, st
+        assert sorted(st["regions"]) == ["eu", "na-east", "sa"]
         run_status(["http://eu.lobby.opensmashultimate.com:39421/", "http://na.lobby.opensmashultimate.com:39421/"], sp, sdocs.get, True)
         assert read_json(sp)["regions"]["na-east"] == {"up": False}
     assert region_of("http://EU.lobby.opensmashultimate.com:39421/x") == "eu" and region_of("http://old.example/") is None
-    assert sorted(region_of(u) for u in LOBBIES) == ["eu", "na-east"], "the default lobbies are the two official ones only"
+    assert region_of("http://sa.lobby.opensmashultimate.com:39421/") == "sa"
+    assert sorted(region_of(u) for u in LOBBIES) == ["eu", "na-east", "sa"], "the default lobbies are the three official ones only"
     assert same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:05:00Z"})
     assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 1, "updated": "2026-01-01T00:11:00Z"})
     assert not same_data({"a": 1, "updated": "2026-01-01T00:00:00Z"}, {"a": 2, "updated": "2026-01-01T00:00:01Z"})
