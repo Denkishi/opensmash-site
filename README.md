@@ -27,7 +27,8 @@ To look at it locally: `python -m http.server 8000` in this folder, then open ht
 
 ## Live data
 
-The official lobbies (`eu.lobby.opensmashultimate.com:39421`, `na.lobby.opensmashultimate.com:39421`) answer plain HTTP on
+The official lobbies (`eu.lobby.opensmashultimate.com:39421`, `na.lobby.opensmashultimate.com:39421`,
+`sa.lobby.opensmashultimate.com:39421`) answer plain HTTP on
 their TCP port, and this site is HTTPS, so the browser cannot read them directly. The **Update mastery and status** workflow therefore copies the lobbies'
 `/mastery.json` (summed) and `/status.json` to the **`data` branch** (a single commit, force-pushed; Pages does not serve it, so
 no Pages build is triggered). The page reads
@@ -55,9 +56,9 @@ by hand: Actions > Update mastery and status > Run workflow.
 - `status.json`: `{"updated","up","online","rooms","arenas","open_rooms","playing"}`. Counts only. Needs the lobby
   built with `/status.json` (OpenSmash-Ultimate PR #370); until it is redeployed the file is absent and the page shows
   "Live counts coming soon". If the lobby does not answer at all, `up` becomes `false` and the page says so.
-  The top-level counts are the two official regions summed (no other lobby is counted); `"regions": {"eu": {...}, "na-east": {...}}` has the official lobbies'
+  The top-level counts are the official regions summed (no other lobby is counted); `"regions": {"eu": {...}, "na-east": {...}, "sa": {...}}` has the official lobbies'
   own counts (`"up": false` for one that did not answer), by host name (`REGION_OF_HOST` in `leaderboard.py`). The home's
-  "Online now" card shows Total (the two regions summed) or one region. The lobbies send `Access-Control-Allow-Origin: *`
+  "Online now" card shows Total (the regions summed) or one region. The lobbies send `Access-Control-Allow-Origin: *`
   but serve plain HTTP only, which an HTTPS page may not read (mixed content), so the page reads this snapshot; once they
   have HTTPS addresses, `LOBBY_HTTPS` in `config.js` (`{"eu": "https://...", "na-east": "https://..."}`) makes the page
   read them live first.
@@ -79,7 +80,7 @@ with a one-time code, and `js/opensmash-auth.js` (`window.OpenSmashAuth`) exchan
 `js/opensmash-account-ui.js` wires the panel on `account/` (ids `osa-*`); `js/nav-login.js` shows `Name#0042` in the
 top bar.
 
-Mastery points (GMP) have one source, the shared account project, which sums every region (EU, NA East; each lobby pushes
+Mastery points (GMP) have one source, the shared account project, which sums every region (EU, NA East, South America; each lobby pushes
 hourly) and SSBU Arena, so this site and ssbuarena.com show the same numbers. `js/opensmash-auth.js`:
 `masteryBoard(fighter, limit, offset)` = `public.opensmash_mastery_board(p_fighter, p_limit, p_offset)` with the publishable
 key only (the Mastery page, 50 rows a request, and the home's top 10); `myMastery()` = `my_opensmash_mastery()` and

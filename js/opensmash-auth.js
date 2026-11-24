@@ -207,7 +207,7 @@
     });
   }
 
-  /* Mastery points (Global Mastery Points, GMP) live in the shared project: the one copy that sums every region (EU, NA East)
+  /* Mastery points (Global Mastery Points, GMP) live in the shared project: the one copy that sums every region (EU, NA East, SA)
      and SSBU Arena, so this site and Arena's show the same numbers. */
   var FIGHTER_RE = /^[a-z0-9_]{1,32}$/;
   /* A fighter as the database returns it: normally a key ("jack"), but a name ("Joker", "Pyra / Mythra") is accepted too
