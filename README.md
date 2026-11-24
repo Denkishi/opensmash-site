@@ -56,7 +56,7 @@ by hand: Actions > Update mastery and status > Run workflow.
 - `status.json`: `{"updated","up","online","rooms","arenas","open_rooms","playing"}`. Counts only. Needs the lobby
   built with `/status.json` (OpenSmash-Ultimate PR #370); until it is redeployed the file is absent and the page shows
   "Live counts coming soon". If the lobby does not answer at all, `up` becomes `false` and the page says so.
-  The top-level counts are the official regions summed (no other lobby is counted); `"regions": {"eu": {...}, "na-east": {...}, "sa": {...}}` has the official lobbies'
+  The top-level counts are the official regions summed, Europe with the lobby v0.4 games still play on (`STATUS_ONLY`, its counts only) (no other lobby is counted); `"regions": {"eu": {...}, "na-east": {...}, "sa": {...}}` has the official lobbies'
   own counts (`"up": false` for one that did not answer), by host name (`REGION_OF_HOST` in `leaderboard.py`). The home's
   "Online now" card shows Total (the regions summed) or one region. The lobbies send `Access-Control-Allow-Origin: *`
   but serve plain HTTP only, which an HTTPS page may not read (mixed content), so the page reads this snapshot; once they
