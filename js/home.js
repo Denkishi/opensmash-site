@@ -155,7 +155,13 @@
     refreshStatus();
     loadBoard();
     setInterval(refreshStatus, REFRESH_MS);
-    setInterval(loadBoard, BOARD_MS);
+    /* The top 10 is read from the shared account project (Supabase, free plan: every call counts) only while the tab is
+       visible, and once when it is shown again after BOARD_MS; that board is kept for an hour on the service side. */
+    var boardAt = Date.now();
+    setInterval(function () { if (!document.hidden) { boardAt = Date.now(); loadBoard(); } }, BOARD_MS);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden && Date.now() - boardAt >= BOARD_MS) { boardAt = Date.now(); loadBoard(); }
+    });
     setInterval(function () { if (lastStatus) showStatus(lastStatus); }, TICK_MS);
   });
 })();
